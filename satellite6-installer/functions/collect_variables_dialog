@@ -267,6 +267,7 @@ exit 1
 fi
 # FIRST_SATELLITE matters only if you want to have more than one Sat work with the same IPAREALM infrastructure.
 # If this is the case, you need to make sure to set this to false for all subsequent Satellite instances.
+echo "I AM HERE"
 echo 'FIRST_SATELLITE=false ' >> /root/.bashrc
 echo ' '
 echo 'In another terminal please check/correct any variables in /root/.bashrc
