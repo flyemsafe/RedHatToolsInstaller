@@ -124,65 +124,77 @@ echo "*************************************************************"
 echo "*********************************************************"
 echo "SET SELINUX TO PERMISSIVE FOR THE INSTALL AND CONFIG OF SATELLITE"
 echo "*********************************************************"
-sed -i 's/SELINUX=enforcing/SELINUX=permissive/g' /etc/selinux/config
-setenforce 0
-service firewalld stop
-chkconfig firewalld off
-HNAME=$(hostname)
-DOM="$(hostname -d)"
-service firewalld stop
-setenforce 0
-mkdir -p /home/admin/Downloads
+echo "In order for the script to work properly we need to eisable Selinux and the firewall."
+read -p "Enter yY disable selinux and stop the firewall " -n 1 -r
+if [[ $REPLY =~ ^[Yy]$ ]]
+then
+    sed -i 's/SELINUX=enforcing/SELINUX=permissive/g' /etc/selinux/config
+    setenforce 0
+    service firewalld stop
+    chkconfig firewalld off
+    HNAME=$(hostname)
+    DOM="$(hostname -d)"
+    service firewalld stop
+    setenforce 0
+    mkdir -p /home/admin/Downloads
+fi
 echo ""
 echo "*********************************************************"
 echo "UNREGESTERING SYSTEM"
 echo "*********************************************************"
-echo "To ensure the system has proper entitlements and the ability to enable required repos"
-read -p "Press [Enter] to continue"
-subscription-manager unregister
-subscription-manager clean
-echo " "
-echo "*********************************************************"
-echo "REGESTERING SYSTEM"
-echo "*********************************************************"
-subscription-manager register --auto-attach
-echo " "
-echo "*********************************************************"
-echo "NOTE:"
-echo "*********************************************************"
-echo "Attaching to your Satellite subscription using the pool id if the predefined value fails please
-obtain your pool id in another terminal running:
-subscription-manager list --available
- or 
-subscription-manager list --available --matches 'Red Hat Satellite'
+echo "To ensure the system has proper entitlements and the ability to enable required repos. If you system is already setup and properly entitled, enter nN for no."
+read -p "Enter yY to unrgister system " -n 1 -r
+if [[ $REPLY =~ ^[Yy]$ ]]
+then
+    subscription-manager unregister
+    subscription-manager clean
+    echo " "
+    echo "*********************************************************"
+    echo "REGESTERING SYSTEM"
+    echo "*********************************************************"
+    subscription-manager register --auto-attach
+    echo " "
+    echo "*********************************************************"
+    echo "NOTE:"
+    echo "*********************************************************"
+    echo "Attaching to your Satellite subscription using the pool id if the predefined value fails please obtain your pool id in another terminal running:
 
-"
-echo " "
-read -p "Press [Enter] 32 digit pool id if prompted "
-echo " "
-subscription-manager attach --pool=`subscription-manager list --available --matches 'Red Hat Satellite Infrastructure Subscription' --pool-only`
-if [ $? -eq 0 ]; then
-    echo 'Attaching Red Hat Satellite Infrastructure Subscription'
-else
-echo 'None of the predefined Satellite Pool IDs worked please enter your 32 digit alphanumeric Pool ID'
-read POOLID
-subscription-manager attach --pool=`POOLID`
-echo " "
+       subscription-manager list --available
+       or 
+       subscription-manager list --available --matches 'Red Hat Satellite'"
+    echo " "
+    read -p "Press [Enter] 32 digit pool id if prompted "
+    echo " "
+    subscription-manager attach --pool=`subscription-manager list --available --matches 'Red Hat Satellite Infrastructure Subscription' --pool-only`
+    if [ $? -eq 0 ]; then
+        echo 'Attaching Red Hat Satellite Infrastructure Subscription'
+    else
+        echo 'None of the predefined Satellite Pool IDs worked please enter your 32 digit alphanumeric Pool ID'
+        read POOLID
+        subscription-manager attach --pool=`POOLID`
+        echo " "
+    fi
+    echo " "
+    echo "*********************************************************"
+    echo "SET REPOS ENABLING THE REDHATTOOLSINSTALLER SCRIPT TO RUN"
+    echo "*********************************************************"
+    subscription-manager repos --disable "*" || exit 1
+    subscription-manager repos --enable=rhel-7-server-rpms || exit 1
+    subscription-manager repos --enable=rhel-7-server-extras-rpms || exit 1
+    subscription-manager repos --enable=rhel-7-server-optional-rpms || exit 1
 fi
-echo " "
-echo "*********************************************************"
-echo "SET REPOS ENABLING THE REDHATTOOLSINSTALLER SCRIPT TO RUN"
-echo "*********************************************************"
-subscription-manager repos --disable "*" || exit 1
-subscription-manager repos --enable=rhel-7-server-rpms || exit 1
-subscription-manager repos --enable=rhel-7-server-extras-rpms || exit 1
-subscription-manager repos --enable=rhel-7-server-optional-rpms || exit 1
-yum -q list installed epel-release-latest-7 &>/dev/null && echo "epel-release-latest-7 is installed" || yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm --skip-broken
-yum -q list installed yum-utils &>/dev/null && echo "yum-utils is installed" || yum install -y yum-util* --skip-broken
-yum-config-manager --enable epel 
-yum-config-manager --save --setopt=*.skip_if_unavailable=true
-rm -fr /var/cache/yum/*
-yum clean all
+echo ""
+echo "Enabling EPEL to enable packages required for this script to succeed, enter nN to skip this if you already have epel enabled."
+read -p "Enter yY to setup epel" -n 1 -r
+if [[ $REPLY =~ ^[Yy]$ ]]
+then
+    yum -q list installed epel-release-latest-7 &>/dev/null && echo "epel-release-latest-7 is installed" || yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm --skip-broken
+    yum -q list installed yum-utils &>/dev/null && echo "yum-utils is installed" || yum install -y yum-util* --skip-broken
+    yum-config-manager --enable epel 
+    yum-config-manager --save --setopt=*.skip_if_unavailable=true
+    rm -fr /var/cache/yum/*
+    yum clean all
+fi
 echo " "
 echo "*********************************************************"
 echo "INSTALLING PACKAGES ENABLING SCRIPT TO RUN"
