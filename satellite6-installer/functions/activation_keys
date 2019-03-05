@@ -1,0 +1,53 @@
+function KEYSTOHOST {
+#-------------------------------
+source /root/.bashrc
+echo -ne "\e[8;40;170t"
+echo " "
+echo "*********************************************************"
+echo "Associate each activation key to host collection:"
+echo "*********************************************************"
+hammer activation-key add-host-collection --name 'RHEL7-x86_64' --host-collection='RHEL 7 x86_64' --organization $ORG
+sleep 5
+hammer activation-key add-host-collection --name 'CentOS7-x86_64' --host-collection='CentOS 7 x86_64' --organization $ORG
+sleep 5
+hammer activation-key add-host-collection --name 'rhel-7-server-x86_64'-PROD_RHEL_7 --host-collection='RHEL 7 x86_64' --organization $ORG
+sleep 5
+}
+#-------------------------------
+function SUBTOKEYS {
+#-------------------------------
+source /root/.bashrc
+echo -ne "\e[8;40;170t"
+echo " "
+echo "********************************"
+echo "
+  There may be errors in the next step (Could not add subscription to activation key) Please ignore these as
+  long as your primary keys for your enabled subscriptions have been added"
+
+echo " "
+echo "********************************"
+echo " "
+echo "*********************************************************"
+echo "Add all subscriptions available to keys:"
+echo "*********************************************************"
+for i in $(hammer --csv activation-key list --organization $ORG | awk -F "," {'print $1'} | grep -vi '^ID'); do for j in $(hammer --csv subscription list --organization $ORG | awk -F "," {'print $1'} | grep -vi '^ID'); do hammer activation-key add-subscription --id ${i} --subscription-id ${j}; done; done
+}
+
+#-------------------------------
+function KEYSFORENV {
+#-------------------------------
+source /root/.bashrc
+echo -ne "\e[8;40;170t"
+echo " "
+echo "*********************************************************"
+echo "Create an activation keys for environments:"
+echo "*********************************************************"
+hammer activation-key create --name 'RHEL7-x86_64' --organization $ORG --content-view='RHEL 7' --lifecycle-environment 'DEV_RHEL_7'
+hammer activation-key create --name 'CentOS7-x86_64' --organization $ORG --content-view='CentOS 7' --lifecycle-environment 'DEV_CentOS_7'
+#hammer activation-key create --name 'rhel-7-server-x86_64'-DEV_RHEL_7 --organization $ORG --content-view='RHEL7-server-x86_64' --lifecycle-environment 'DEV_RHEL_7'
+#sleep 5
+#hammer activation-key create --name 'rhel-7-server-x86_64'-TEST_RHEL_7 --organization $ORG --content-view='RHEL7-server-x86_64' --lifecycle-environment 'TEST_RHEL_7'
+#sleep 5
+#hammer activation-key create --name 'rhel-7-server-x86_64'-PROD_RHEL_7 --organization $ORG --content-view='RHEL7-server-x86_64' --lifecycle-environment 'PROD_RHEL_7'
+#sleep 5
+}

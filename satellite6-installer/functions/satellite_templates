@@ -1,0 +1,89 @@
+#-------------------------------
+function REMOVEUNSUPPORTED {
+#-------------------------------
+source /root/.bashrc
+echo -ne "\e[8;40;170t"
+echo " "
+echo "*********************************************************"
+echo "REMOVING UNSUPPORTED COMPONENTS DESTRUCTIVE"
+echo "*********************************************************"
+for i in $(hammer template list |grep -i FreeBSD |awk -F "|" {'print $1'}) ; do hammer template delete --id $i ;done
+for i in $(hammer template list |grep -i CoreOS |awk -F "|" {'print $1'}) ; do hammer template delete --id $i ;done
+for i in $(hammer template list |grep -i salt |awk -F "|" {'print $1'}) ; do hammer template delete --id $i ;done
+for i in $(hammer template list |grep -i waik |awk -F "|" {'print $1'}) ; do hammer template delete --id $i ;done
+for i in $(hammer template list |grep -i NX-OS |awk -F "|" {'print $1'}) ; do hammer template delete --id $i ;done
+for i in $(hammer template list |grep -i Alterator |awk -F "|" {'print $1'}) ; do hammer template delete --id $i ;done
+for i in $(hammer template list |grep -i Junos |awk -F "|" {'print $1'}) ; do hammer template delete --id $i ;done
+for i in $(hammer template list |grep -i Jumpstart |awk -F "|" {'print $1'}) ; do hammer template delete --id $i ;done
+for i in $(hammer template list |grep -i Preseed |awk -F "|" {'print $1'}) ; do hammer template delete --id $i ;done
+for i in $(hammer template list |grep -i chef |awk -F "|" {'print $1'}) ; do hammer template delete --id $i ;done
+for i in $(hammer template list |grep -i AutoYaST |awk -F "|" {'print $1'}) ; do hammer template delete --id $i ;done
+for i in $(hammer partition-table list |grep -i AutoYaST |awk -F "|" {'print $1'}) ; do hammer partition-table delete --id $i ;done
+for i in $(hammer partition-table list |grep -i CoreOS |awk -F "|" {'print $1'}) ; do hammer partition-table delete --id $i ;done
+for i in $(hammer partition-table list |grep -i FreeBSD |awk -F "|" {'print $1'}) ; do hammer partition-table delete --id $i ;done
+for i in $(hammer partition-table list |grep -i Jumpstart |awk -F "|" {'print $1'}) ; do hammer partition-table delete --id $i ;done
+for i in $(hammer partition-table list |grep -i Junos |awk -F "|" {'print $1'}) ; do hammer partition-table delete --id $i ;done
+for i in $(hammer partition-table list |grep -i NX-OS |awk -F "|" {'print $1'}) ; do hammer partition-table delete --id $i ;done
+for i in $(hammer partition-table list |grep -i Preseed |awk -F "|" {'print $1'}) ; do hammer partition-table delete --id $i ;done
+for i in $(hammer medium list |grep -i CentOS |awk -F "|" {'print $1'}) ; do hammer medium delete --id $i ;done
+for i in $(hammer medium list |grep -i CoreOS |awk -F "|" {'print $1'}) ; do hammer medium delete --id $i ;done
+for i in $(hammer medium list |grep -i Debian |awk -F "|" {'print $1'}) ; do hammer medium delete --id $i ;done
+for i in $(hammer medium list |grep -i Fedora |awk -F "|" {'print $1'}) ; do hammer medium delete --id $i ;done
+for i in $(hammer medium list |grep -i FreeBSD |awk -F "|" {'print $1'}) ; do hammer medium delete --id $i ;done
+for i in $(hammer medium list |grep -i OpenSUSE |awk -F "|" {'print $1'}) ; do hammer medium delete --id $i ;done
+for i in $(hammer medium list |grep -i Ubuntu |awk -F "|" {'print $1'}) ; do hammer medium delete --id $i ;done
+}
+#-------------------------------
+function DISASSOCIATE_TEMPLATES {
+#------------------------------
+source /root/.bashrc
+echo -ne "\e[8;40;170t"
+echo "*********************************************************"
+echo "DISASSOCIATE UNSUPPORTED COMPONENTS NONDESTRUCTIVE"
+echo "*********************************************************"
+echo " "
+declare -a TEMPLATES=(
+"Alterator default"
+"Alterator default finish"
+"Alterator default PXELinux"
+"alterator_pkglist"
+"AutoYaST default"
+"AutoYaST default user data"
+"AutoYaST default iPXE"
+"AutoYaST default PXELinux"
+"AutoYaST SLES default"
+"chef_client"
+"coreos_cloudconfig"
+"CoreOS provision"
+"CoreOS PXELinux"
+"Discovery Debian kexec"
+"FreeBSD (mfsBSD) finish"
+"FreeBSD (mfsBSD) provision"
+"FreeBSD (mfsBSD) PXELinux"
+"Jumpstart default"
+"Jumpstart default finish"
+"Jumpstart default PXEGrub"
+"Junos default finish"
+"Junos default SLAX"
+"Junos default ZTP config"
+"NX-OS default POAP setup"
+"Preseed default"
+"Preseed default finish"
+"Preseed default PXEGrub2"
+"Preseed default iPXE"
+"Preseed default PXELinux"
+"Preseed default user data"
+"preseed_networking_setup"
+"saltstack_minion"
+"WAIK default PXELinux"
+"XenServer default answerfile"
+"XenServer default finish"
+"XenServer default PXELinux"
+ )
+for INDEX in "${TEMPLATES[@]}"
+do
+echo disassoction of ${INDEX} from ${ORG}@${LOC}
+hammer organization remove-config-template --config-template "${INDEX}" --name "${ORG}"
+hammer location remove-config-template --config-template "${INDEX}" --name "${LOC}"
+done
+}

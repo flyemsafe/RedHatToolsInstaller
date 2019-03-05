@@ -1,0 +1,67 @@
+#-------------------------------
+function MEDIUM {
+#-------------------------------
+source /root/.bashrc
+echo -ne "\e[8;40;170t"
+echo " "
+echo "*********************************************************"
+echo "Create Media:"
+echo "*********************************************************"
+hammer medium create --path=http://repos/${ORG}/Library/content/dist/rhel/server/7/7.6/x86_64/kickstart/ --organizations=$ORG --locations="$LOC" --os-family=Redhat --name="RHEL 7.6 Kickstart" --operatingsystems="RedHat 7.6"
+}
+
+function PARTITION_OS_PXE_TEMPLATE {
+#-----------------------------------
+source /root/.bashrc
+echo -ne "\e[8;40;170t"
+echo "*********************************************************"
+echo "Setting Default Templates."
+echo "*********************************************************"
+for i in $OSID
+do
+hammer partition-table add-operatingsystem --id="${PARTID}" --operatingsystem-id="${i}"
+hammer template add-operatingsystem --id="${PXEID}" --operatingsystem-id="${i}"
+hammer os set-default-template --id="${i}" --config-template-id="${PXEID}"
+hammer os add-config-template --id="${i}" --config-template-id="${SATID}"
+hammer os set-default-template --id="${i}" --config-template-id="${SATID}"
+done
+}
+#-------------------------------
+function HOSTGROUPS {
+#-------------------------------
+source /root/.bashrc
+echo -ne "\e[8;40;170t"
+echo " "
+echo "*********************************************************"
+echo "Create a RHEL hostgroup(s):"
+echo "*********************************************************"
+#MAKES ROOTPASSWORD ON NODES rreeddhhaatt BECAUSE THE SYSTEM REQUIRES IT TO BE 8+ CHAR (--root-pass rreeddhhaatt)
+ENVIROMENT=$(hammer --csv lifecycle-environment list |awk -F "," {'print $2'}|grep -v Name |grep -v production)
+LEL=$(hammer --csv environment list  |awk -F "," {'print $2'}|grep -v Name)
+for i in $LEL; do for j in $(hammer --csv environment list |awk -F "," {'print $2'}| awk -F "_" {'print $1'}|grep -v Name); do hammer hostgroup create --name RHEL-7.6-$j --environment $i --architecture-id $ARCHID --content-view-id $CVID --domain-id $DOMID --location-ids $LOCID --medium-id $MEDID1 --operatingsystem-id $OSID1 --organization-id=$ORGID  --partition-table-id $PARTID --puppet-ca-proxy-id $PROXYID --subnet-id $SUBNETID --root-pass=rreeddhhaatt ; done; done
+#for i in $LEL; do for j in $(hammer --csv environment list |awk -F "," {'print $2'}| awk -F "_" {'print $1'}|grep -v Name); do hammer hostgroup create --name CentOS-7.6-$j --environment $i --architecture-id $ARCHID --content-view-id $CVID --domain-id $DOMID --location-ids $LOCID --medium-id $MEDID2 --operatingsystem-id $OSID2 --organization-id=$ORGID  --partition-table-id $PARTID --puppet-ca-proxy-id $PROXYID --subnet-id $SUBNETID --root-pass=redhat ; done; done
+}
+#-------------------------------
+function MODPXELINUXDEF {
+#-------------------------------
+source /root/.bashrc
+echo -ne "\e[8;40;170t"
+echo " "
+echo "*********************************************************"
+echo "Setting up and Modifying default template for auto discovery"
+echo "*********************************************************"
+#sed -i 's/SATELLITE_CAPSULE_URL/'$(hostname)'/g' /usr/share/foreman/app/views/unattended/pxe/PXELinux_default.erb
+#sed -i 's/'$(hostname -f)'/$SAT_IP/g' /etc/foreman-proxy/settings.d/tftp.yml
+hammer template update --id 1
+}
+#-------------------------------
+function ADD_OS_TO_TEMPLATE {
+#-------------------------------
+source /root/.bashrc
+echo -ne "\e[8;40;170t"
+echo " "
+echo "*********************************************************"
+echo "ASSOCIATE OS TO TEMPLATE"
+echo "*********************************************************"
+hammer template add-operatingsystem --operatingsystem-id 1 --id 1
+}

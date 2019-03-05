@@ -1,0 +1,52 @@
+
+
+
+
+#-------------------------------
+function REQUESTSYNCMGT {
+#-------------------------------
+echo "*********************************************************"
+echo "Configuring Repositories"
+echo "*********************************************************"
+echo "*********************************************************"
+echo "BY DEFAULT IF YOU JUST LET THIS SCRIPT RUN YOU WILL
+ONLY SYNC THE  CORE RHEL 7 (KICKSTART, 7SERVER, OPTIONAL, EXTRAS,
+ SAT 6.4 TOOLS, SUPPLAMENTRY, AND RH COMMON ) THE PROGRESS
+ TO THIS STEP CAN BE TRACKED AT $(hostname)/katello/sync_management :"
+echo "*********************************************************"
+if ! xset q &>/dev/null; then
+    echo "No X server at \$DISPLAY [$DISPLAY]" >&2
+    echo 'In a system browser please goto the URL to view progress https://$(hostname)/katello/sync_management'
+    sleep 10
+else
+    firefox https://$(hostname)/katello/sync_management &
+fi
+}
+#-------------------------------
+
+#-------------------------------
+function SYNC {
+#------------------------------
+source /root/.bashrc
+echo -ne "\e[8;40;170t"
+echo " "
+echo "*********************************************************"
+echo "SYNC ALL REPOSITORIES (WAIT FOR THIS TO COMPLETE BEFORE CONTINUING):"
+echo "*********************************************************"
+for i in $(hammer --csv repository list --organization $ORG | awk -F, {'print $1'} | grep -vi '^ID'); do hammer repository synchronize --id ${i} --organization $ORG ; done
+sleep 5
+echo " "
+}
+#-------------------------------
+function SYNCMSG {
+#------------------------------
+echo " "
+if ! xset q &>/dev/null; then
+    echo "No X server at \$DISPLAY [$DISPLAY]" >&2
+    echo 'In a system browser please goto the URL to view progress https://$(hostname)/katello/sync_management'
+    sleep 10
+else
+    firefox https://$(hostname)/katello/sync_management &
+fi
+echo " "
+}

@@ -1,0 +1,285 @@
+---START OF SAT 6.X CONFIGURE SCRIPT---
+#  --------------------------------------
+function CONFSAT {
+#  --------------------------------------
+echo " "
+source /root/.bashrc
+echo -ne "\e[8;40;170t"
+echo "*********************************************************"
+echo "CONFIGURING SATELLITE"
+echo "*********************************************************"
+echo " "
+echo "*********************************************************"
+echo "CONFIGURING SATELLITE BASE"
+echo "*********************************************************"
+satellite-installer --scenario satellite -v \
+--foreman-admin-password=$ADMIN_PASSWORD \
+--foreman-admin-username=$ADMIN \
+--foreman-initial-organization=$ORG \
+--foreman-initial-location=$LOC \
+--foreman-proxy-dns true \
+--foreman-proxy-dns-managed=true \
+--foreman-proxy-dns-provider=nsupdate \
+--foreman-proxy-dns-server="127.0.0.1" \
+--foreman-proxy-dns-interface $SAT_INTERFACE \
+--foreman-proxy-dns-zone=$DOM \
+--foreman-proxy-dns-forwarders $DNS \
+--foreman-proxy-dns-tsig-principal="foreman-proxy $(hostname)@$DOM" \
+--foreman-proxy-dns-tsig-keytab=/etc/foreman-proxy/dns.key \
+--foreman-proxy-dns-listen-on both \
+--foreman-proxy-dns-reverse $DNS_REV
+echo " "
+echo "*********************************************************"
+echo "CONFIGURING SATELLITE DHCP"
+echo "*********************************************************"
+source /root/.bashrc
+satellite-installer --scenario satellite -v \
+--foreman-proxy-dhcp true \
+--foreman-proxy-dhcp-server=$INTERNALIP \
+--foreman-proxy-dhcp-interface=$SAT_INTERFACE \
+--foreman-proxy-dhcp-range="$DHCP_RANGE" \
+--foreman-proxy-dhcp-gateway=$DHCP_GW \
+--foreman-proxy-dhcp-nameservers=$DHCP_DNS \
+--foreman-proxy-dhcp-listen-on both \
+--foreman-proxy-dhcp-search-domains=$DOM
+
+echo " "
+echo "*********************************************************"
+echo "CONFIGURING SATELLITE TFTP"
+echo "*********************************************************"
+source /root/.bashrc
+satellite-installer --scenario satellite -v \
+--foreman-proxy-tftp true \
+--foreman-proxy-tftp-listen-on both \
+--foreman-proxy-tftp-servername=$SAT_IP
+echo " "
+echo "*********************************************************"
+echo "CONFIGURING ALL SATELLITE PLUGINS"
+echo "*********************************************************"
+yum groupinstall -y 'Red Hat Satellite'
+yum -q list installed puppet-foreman_scap_client &>/dev/null && echo "puppet-foreman_scap_client is installed" || yum install -y puppet-foreman_scap_client* --skip-broken
+yum -q list installed foreman-discovery-image &>/dev/null && echo "foreman-discovery-image is installed" || yum install -y foreman-discovery-image* --skip-broken
+yum -q list installed rubygem-smart_proxy_discovery &>/dev/null && echo "rubygem-smart_proxy_discovery is installed" || yum install -y rubygem-smart_proxy_discovery* --skip-broken
+
+source /root/.bashrc
+satellite-installer --scenario satellite -v \
+--foreman-proxy-plugin-discovery-install-images true \
+--enable-foreman-plugin-discovery \
+--foreman-plugin-tasks-automatic-cleanup true \
+--foreman-proxy-content-enable-ostree true \
+--enable-foreman-plugin-docker \
+--enable-foreman-plugin-hooks \
+--enable-foreman-plugin-openscap \
+--enable-foreman-plugin-templates \
+--enable-foreman-plugin-tasks \
+--enable-foreman-compute-ec2 \
+--enable-foreman-compute-gce \
+--enable-foreman-compute-libvirt \
+--enable-foreman-compute-openstack \
+--enable-foreman-compute-ovirt \
+--enable-foreman-compute-rackspace \
+--enable-foreman-compute-vmware \
+--enable-foreman-plugin-bootdisk \
+--foreman-proxy-http true \
+--foreman-proxy-ssl=true \
+--foreman-proxy-templates-listen-on both \
+--foreman-proxy-puppet-listen-on both \
+--foreman-proxy-templates=true
+
+
+
+echo " "
+echo "*********************************************************"
+echo "ENABLE DEB"
+echo "*********************************************************"
+foreman-installer -v --foreman-proxy-content-enable-deb --katello-enable-deb
+echo " "
+echo "*********************************************************"
+echo "CONFIGURING SATELLITE CACHE"
+echo "*********************************************************"
+foreman-rake apipie:cache:index --trace
+echo " "
+echo "*********************************************************"
+echo "DHCP SATELLITE"
+echo "*********************************************************"
+echo " "
+DEFAULTDHCP=y
+COUNTDOWN=15
+read -n1 -p "Would like to use the DHCP server provided by Satellite? y/n " INPUT
+INPUT=${INPUT:-$DEFAULTDHCP}
+if  [ "$INPUT" = "y" -o "$INPUT" = "Y" ] ;then
+echo " "
+echo "DHCPD ENABLED"
+#COMMANDEXECUTION
+elif [ "$INPUT" = "n" -o "$INPUT" = "N" ] ;then
+echo " "
+echo "DHCPD DISABLED"
+chkconfig dhcpd off
+service dhcpd stop
+#COMMANDEXECUTION
+else
+echo -e "\n$FMESSAGE\n"
+REQUEST
+fi
+}
+
+#  --------------------------------------
+function CONFIG2 {
+#  --------------------------------------
+source /root/.bashrc
+echo -ne "\e[8;40;170t"
+echo ' '
+echo "*********************************************************"
+echo 'Download manifest from https://access.redhat.com/management/subscription_allocations/
+ so you can build and export the manifest (just in case).
+This must be saved into the /home/admin/Downloads directory'
+echo "*********************************************************"
+echo ' '
+read -p "Press [Enter] to continue"
+echo ' '
+echo ' '
+echo "*********************************************************"
+echo 'If you have put your manafest into /home/admin/Downloads/'
+echo "*********************************************************"
+read -p "Press [Enter] to continue"
+sleep 5
+echo "*********************************************************"
+echo 'WHEN PROMPTED PLEASE ENTER YOUR SATELLITE ADMIN USERNAME AND PASSWORD'
+echo "*********************************************************"
+sleep 5
+chown -R admin:admin /home/admin
+source /root/.bashrc
+for i in $(find /home/admin/Downloads/ |grep manifest* ); do sudo -u admin hammer subscription upload --file $i --organization $ORG ; done  || exit 1
+hammer subscription refresh-manifest --organization $ORG
+echo "*********************************************************"
+echo 'REFRESHING THE CAPSULE CONTENT'
+echo "*********************************************************"
+for i in $(hammer capsule list |awk -F '|' '{print $1}' |grep -v ID|grep -v -) ; do hammer capsule refresh-features --id=$i ; done
+sleep 5
+echo "*********************************************************"
+echo 'SETTING SATELLITE EVN SETTINGS'
+echo "*********************************************************"
+hammer settings set --name default_download_policy --value on_demand
+hammer settings set --name default_organization  --value $ORG
+hammer settings set --name default_location  --value $LOC
+hammer settings set --name discovery_organization  --value $ORG
+hammer settings set --name discovery_organization  --value $ORG
+hammer settings set --name root_pass --value $NODEPASS
+
+mkdir -p /etc/puppet/environments/production/modules
+}
+
+function PRIDOMAIN {
+#------------------------------
+hammer domain update --id 1 --organizations $ORG --locations $LOC
+}
+#-------------------------------
+function CREATESUBNET {
+#------------------------------
+source /root/.bashrc
+echo -ne "\e[8;40;170t"
+echo "*********************************************************"
+echo "CREATE THE FIRST OR PRIMARY SUBNET TO CONNECT THE NODES TO THE SATELLITE:"
+echo "*********************************************************"
+echo " "
+hammer subnet create --name $SUBNET_NAME --network $INTERNALNETWORK --mask $SUBNET_MASK --gateway $DHCP_GW --dns-primary $DNS --ipam 'Internal DB' --from $SUBNET_IPAM_BEGIN --to $SUBNET_IPAM_END --tftp-id 1 --dhcp-id 1 --dns-id 1 --domain-ids 1 --organizations $ORG --locations "$LOC"
+}
+#-------------------------------
+function ENVIRONMENTS {
+#-------------------------------
+source /root/.bashrc
+echo -ne "\e[8;40;170t"
+echo " "
+echo "*********************************************************"
+echo "CREATE ENVIRONMENTS DEV_RHEL->TEST_RHEL->PROD_RHEL:"
+echo "*********************************************************"
+echo "DEVLOPMENT_RHEL_7"
+hammer lifecycle-environment create --name='DEV_RHEL_7' --prior='Library' --organization $ORG
+echo "TEST_RHEL_7"
+hammer lifecycle-environment create --name='TEST_RHEL_7' --prior='DEV_RHEL_7' --organization $ORG
+echo "PRODUCTION_RHEL_7"
+hammer lifecycle-environment create --name='PROD_RHEL_7' --prior='TEST_RHEL_7' --organization $ORG
+echo "DEVLOPMENT_RHEL_6"
+hammer lifecycle-environment create --name='DEV_RHEL_6' --prior='Library' --organization $ORG
+echo "TEST_RHEL_6"
+hammer lifecycle-environment create --name='TEST_RHEL_6' --prior='DEV_RHEL_6' --organization $ORG
+echo "PRODUCTION_RHEL_6"
+hammer lifecycle-environment create --name='PROD_RHEL_6' --prior='TEST_RHEL_6' --organization $ORG
+echo "DEVLOPMENT_RHEL_5"
+hammer lifecycle-environment create --name='DEV_RHEL_5' --prior='Library' --organization $ORG
+echo "TEST_RHEL_5"
+hammer lifecycle-environment create --name='TEST_RHEL_5' --prior='DEV_RHEL_5' --organization $ORG
+echo "PRODUCTION_RHEL_5"
+hammer lifecycle-environment create --name='PROD_RHEL_5' --prior='TEST_RHEL_5' --organization $ORG
+echo "DEVLOPMENT_CentOS_7"
+hammer lifecycle-environment create --name='DEV_CentOS_7' --prior='Library' --organization $ORG
+echo "TEST_CentOS_7"
+hammer lifecycle-environment create --name='TEST_CentOS_7' --prior='DEV_CentOS_7' --organization $ORG
+echo "PRODUCTION_CentOS_7"
+hammer lifecycle-environment create --name='PROD_CentOS_7' --prior='TEST_CentOS_7' --organization $ORG
+echo " "
+hammer lifecycle-environment list --organization $ORG
+echo " "
+}
+#-------------------------------
+function DAILYSYNC {
+#-------------------------------
+source /root/.bashrc
+echo -ne "\e[8;40;170t"
+echo " "
+echo "*********************************************************"
+echo "Create a daily sync plan:"
+echo "*********************************************************"
+hammer sync-plan create --name 'Daily_Sync' --description 'Daily Synchronization Plan' --organization $ORG --interval daily --sync-date $(date +"%Y-%m-%d")" 00:00:00" --enabled no
+hammer sync-plan create --name 'Weekly_Sync' --description 'Weekly Synchronization Plan' --organization $ORG --interval weekly --sync-date $(date +"%Y-%m-%d")" 00:00:00" --enabled yes
+hammer sync-plan list --organization $ORG
+echo " "
+
+}
+#-------------------------------
+function SYNCPLANCOMPONENTS {
+#-------------------------------
+source /root/.bashrc
+echo -ne "\e[8;40;170t"
+echo " "
+hammer product set-sync-plan --name 'Red Hat Enterprise Linux Server' --organization $ORG --sync-plan 'Weekly_Sync'
+hammer product set-sync-plan --name 'Extra Packages for Enterprise Linux 7' --organization $ORG --sync-plan 'Weekly_Sync'
+hammer product set-sync-plan --name 'Extra Packages for Enterprise Linux 6' --organization $ORG --sync-plan 'Weekly_Sync'
+hammer product set-sync-plan --name 'Extra Packages for Enterprise Linux 5' --organization $ORG --sync-plan 'Weekly_Sync'
+hammer product set-sync-plan --name 'Puppet Forge' --organization $ORG --sync-plan 'Weekly_Sync'
+hammer product set-sync-plan --name 'CentOS-7' --organization $ORG --sync-plan 'Weekly_Sync'
+}
+#-------------------------------
+function ASSOCPLANTOPRODUCTS {
+#-------------------------------
+source /root/.bashrc
+echo -ne "\e[8;40;170t"
+echo " "
+echo "*********************************************************"
+echo "Associate plan to products:"
+echo "*********************************************************"
+hammer product set-sync-plan --sync-plan-id=1 --organization $ORG --name='Oracle Java for RHEL Server'
+hammer product set-sync-plan --sync-plan-id=1 --organization $ORG --name='Red Hat Enterprise Linux Server'
+hammer product set-sync-plan --sync-plan-id=1 --organization $ORG --name='Puppet Forge'
+hammer product set-sync-plan --sync-plan-id=2 --organization $ORG --name='Extra Packages for Enterprise Linux 5'
+hammer product set-sync-plan --sync-plan-id=2 --organization $ORG --name='Extra Packages for Enterprise Linux 6'
+hammer product set-sync-plan --sync-plan-id=1 --organization $ORG --name='Extra Packages for Enterprise Linux 7'
+hammer product set-sync-plan --sync-plan-id=2 --organization $ORG --name='CentOS-7'
+}
+
+#-------------------------------
+function HOSTCOLLECTION {
+#-------------------------------
+source /root/.bashrc
+echo -ne "\e[8;40;170t"
+echo " "
+echo "***********************************"
+echo "Create a host collection for RHEL:"
+echo "***********************************"
+hammer host-collection create --name='RHEL 7 x86_64' --organization $ORG
+hammer host-collection create --name='CentOS 7 x86_64' --organization $ORG
+hammer host-collection create --name='RHEL 5 x86_64' --organization $ORG
+hammer host-collection create --name='RHEL 6 x86_64' --organization $ORG
+sleep 10
+hammer host-collection list --organization $ORG
+}

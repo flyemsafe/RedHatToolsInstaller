@@ -1,0 +1,30 @@
+function INSTALLNSAT {
+#  --------------------------------------
+echo " "
+echo "*********************************************************"
+echo "INSTALLING SATELLITE"
+echo "*********************************************************"
+echo " "
+echo -ne "\e[8;40;170t"
+source /root/.bashrc
+echo "Disabling EPEL repos"
+yum-config-manager --disable epel
+echo " "
+echo "Enabling Repos -> RHEL 7, RHSCL 7, Optional, Satellite 6.4, and Satellite Maintenance 6.0"
+subscription-manager repos --enable=rhel-7-server-rpms || exit 1
+subscription-manager repos --enable=rhel-server-rhscl-7-rpms || exit 1
+subscription-manager repos --enable=rhel-7-server-optional-rpms || exit 1
+subscription-manager repos --enable=rhel-7-server-satellite-6.4-rpms || exit 1
+subscription-manager repos --enable=rhel-7-server-satellite-maintenance-6-rpms || exit 1
+yum clean all
+rm -rf /var/cache/yum
+
+echo "Installing Satellite 6.4"
+yum -q list installed satellite &>/dev/null && echo "satellite is installed" || time yum install satellite -y --skip-broken
+echo "Installing puppetserver"
+yum -q list installed puppetserver &>/dev/null && echo "puppetserver is installed" || time yum install puppetserver -y --skip-broken
+echo "Installing puppet-agent-oauth"
+yum -q list installed puppet-agent-oauth &>/dev/null && echo "puppet-agent-oauth is installed" || time yum install puppet-agent-oauth -y --skip-broken
+echo "Installing puppet-agent"
+yum -q list installed puppet-agent &>/dev/null && echo "puppet-agent is installed" || time yum install puppet-agent -y --skip-broken
+}

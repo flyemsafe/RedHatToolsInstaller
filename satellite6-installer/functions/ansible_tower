@@ -1,0 +1,119 @@
+function ANSIBLETOWER {
+echo -ne "\e[8;33;120t"
+reset
+
+HNAME=$(hostname)
+echo " "
+echo " "
+echo " "
+echo " "
+echo "
+ANSIBLE-TOWER BASE REQUIREMENTS
+
+1. Ansible-Tower will require a license.
+Please register and download your lincense at http://www.ansible.com/tower-trial
+
+2. Hardware requirement depends, however whether
+  it is a KVM or physical-Tower will require atleast 1 node with:
+
+Min Storage 30 GB
+DirectoryRecommended
+/Rest of drive
+/boot  1024MB
+/swap  8192MB
+
+Min RAM 4096
+Min CPU2 (4 Reccomended)"
+echo " "
+echo " "
+echo " "
+echo " "
+echo " "
+read -p "Press [Enter] to continue"
+echo "
+
+REQUIREMENTS CONTINUED
+3. Network
+Connection to the internet so the instller can download the required packages
+
+4. For this POC you must have a RHN User ID and password with entitlements
+    to channels below. (item 6)
+
+5. Install ansible tgz will be downloaded and placed into the FILES directory created by the sript on the host machine:
+
+* Ansible-Tower download will be pulled from https://releases.ansible.com/awx/setup/ansible-tower-setup-latest.tar.gz
+
+6. This install was tested with:
+          * RHEL_7.6 in a KVM environment.
+          * Red Hat subscriber channels:
+             rhel-7-server-ansible-2.7-rpms
+             rhel-7-server-extras-rpms
+             rhel-7-server-optional-rpms
+             rhel-7-server-rpms
+             https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+
+
+7. Additional resources, packages, and documentation may be found at
+                    http://www.ansible.com
+                    https://www.ansible.com/tower-trial
+                    http://docs.ansible.com/ansible-tower/latest/html/quickinstall/index.html"
+echo " "
+echo " "
+read -p "If you have met the minimum requirement from above please Press [Enter] to continue"
+
+#!/bin/bash
+echo "************************************"
+echo "installing prereq"
+echo "************************************"
+if grep -q -i "release 7.6" /etc/redhat-release ; then
+rhel7only=1
+echo "RHEL 7.6"
+yum --noplugins -q list installed epel-release-latest-7 &>/dev/null && echo "epel-release-latest-7 is installed" || yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm --skip-broken --noplugins
+else
+echo "Not Running RHEL 7.x !"
+fi
+echo " "
+yum --noplugins -q list installed yum-utils &>/dev/null && echo "yum-utils is installed" || yum install -y yum-utils --skip-broken --noplugins
+yum --noplugins -q list installed ansible &>/dev/null && echo "ansible is installed" || yum install -y ansible --skip-broken --noplugins
+yum --noplugins -q list installed wget &>/dev/null && echo "wget is installed" || yum install -y wget --skip-broken --noplugins
+yum --noplugins -q list installed bash-completion-extras &>/dev/null && echo "bash-completion-extras" || yum install -y bash-completion-extras --skip-broken --noplugins
+yum --noplugins -q list installed openssh-clients &>/dev/null && echo "openssh-clients" || yum install -y openssh-clients --skip-broken --noplugins
+sleep 10
+
+echo " "
+echo '************************************'
+echo 'Creating FILES dir here'
+echo '************************************'
+mkdir -p FILES
+cd FILES
+pwd
+sleep 10
+
+echo " "
+echo '************************************'
+echo 'Wget Ansible Tower'
+echo '************************************'
+if grep -q -i "release 7" /etc/redhat-release ; then
+ rhel7only=1
+echo "RHEL 7 supporting latest release"
+wget https://releases.ansible.com/awx/setup/ansible-tower-setup-latest.tar.gz
+else
+ echo "Not Running RHEL 7.x !"
+fi
+echo " "
+sleep 10
+
+echo " "
+echo '************************************'
+echo 'Expanding Ansible Tower and installing '
+echo '************************************'
+
+cd FILES
+tar -zxvf ansible-tower-*.tar.gz
+cd ansible-tower*
+sed -i 's/admin_password="''"/admin_password="'redhat'"/g' inventory
+sed -i 's/redis_password="''"/redis_password="'redhat'"/g' inventory
+sed -i 's/pg_password="''"/pg_password="'redhat'"/g' inventory
+sed -i 's/rabbitmq_password="''"/rabbitmq_password="'redhat'"/g' inventory
+sh setup.sh
+}

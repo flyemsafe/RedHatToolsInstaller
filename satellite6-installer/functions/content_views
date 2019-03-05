@@ -1,0 +1,180 @@
+function CONTENTVIEWS {
+#-------------------------------
+source /root/.bashrc
+echo -ne "\e[8;40;170t"
+echo " "
+echo "***********************************************"
+echo "Create a content view for CentOS-7:"
+echo "***********************************************"
+#hammer content-view create --name='RHEL7-server-x86_64' --organization $ORG
+#sleep 20
+#for i in $(hammer --csv repository list --organization $ORG | awk -F, {'print $1'} | grep -vi '^ID'); do hammer content-view add-repository --name RHEL7-Base --organization $ORG --repository-id=${i}; done
+hammer content-view create --organization $ORG --name 'CentOS 7' --label 'CentOS7' --description 'CentOS 7'
+hammer content-view add-repository --organization $ORG --name 'CentOS 7' --product 'CentOS-7' --repository 'CentOS-7 (Kickstart)'
+hammer content-view add-repository --organization $ORG --name 'CentOS 7' --product 'CentOS-7' --repository 'CentOS-7 Gluster 5'
+hammer content-view add-repository --organization $ORG --name 'CentOS 7' --product 'CentOS-7' --repository 'CentOS-7 Extras'
+hammer content-view add-repository --organization $ORG --name 'CentOS 7' --product 'CentOS-7' --repository 'CentOS-7 ISO'
+hammer content-view add-repository --organization $ORG --name 'CentOS 7' --product 'CentOS-7' --repository 'CentOS-7 Openshift-Origin'
+hammer content-view add-repository --organization $ORG --name 'CentOS 7' --product 'CentOS-7' --repository 'CentOS-7 DotNET'
+hammer content-view add-repository --organization $ORG --name 'CentOS 7' --product 'CentOS-7' --repository 'CentOS-7 CentOSplus'
+hammer content-view add-repository --organization $ORG --name 'CentOS 7' --product 'CentOS-7' --repository 'CentOS-7 Ceph-Luminous'
+hammer content-view add-repository --organization $ORG --name 'CentOS 7' --product 'CentOS-7' --repository 'CentOS-7 Fasttrack'
+hammer content-view add-repository --organization $ORG --name 'CentOS 7' --product 'CentOS-7' --repository 'CentOS-7 OpsTools'
+hammer content-view add-repository --organization $ORG --name 'CentOS 7' --product 'CentOS-7' --repository 'CentOS-7 Updates'
+time hammer content-view publish --organization $ORG --name 'CentOS 7' --description 'Initial Publishing' 2>/dev/null
+time hammer content-view version promote --organization $ORG --content-view 'CentOS 7' --to-lifecycle-environment DEV_CentOS_7  2>/dev/null
+echo " "
+echo "***********************************************"
+echo "CREATE A CONTENT VIEW FOR RHEL 7:"
+echo "***********************************************"
+hammer content-view create --organization $ORG --name 'RHEL 7' --label RHEL7 --description 'RHEL 7'
+hammer content-view add-repository --organization $ORG --name 'RHEL 7' --product 'Red Hat Enterprise Linux Server' --repository 'Red Hat Enterprise Linux 7 Server RPMs x86_64 7Server'
+hammer content-view add-repository --organization $ORG --name 'RHEL 7' --product 'Red Hat Enterprise Linux Server' --repository 'Red Hat Enterprise Linux 7 Server Kickstart x86_64 7.6'
+hammer content-view add-repository --organization $ORG --name 'RHEL 7' --product 'Red Hat Enterprise Linux Server' --repository 'Red Hat Satellite Tools 6.4 for RHEL 7 Server RPMs x86_64'
+hammer content-view add-repository --organization $ORG --name 'RHEL 7' --product 'Red Hat Software Collections for RHEL Server' --repository 'Red Hat Software Collections RPMs for Red Hat Enterprise Linux 7 Server x86_64 7Server'
+hammer content-view add-repository --organization $ORG --name 'RHEL 7' --product 'Red Hat Enterprise Linux Server' --repository 'Red Hat Enterprise Linux 7 Server - Supplementary RPMs x86_64 7Server'
+hammer content-view add-repository --organization $ORG --name 'RHEL 7' --product 'Red Hat Enterprise Linux Server' --repository 'Red Hat Enterprise Linux 7 Server - RH Common RPMs x86_64 7Server'
+hammer content-view add-repository --organization $ORG --name 'RHEL 7' --product 'Red Hat Enterprise Linux Server' --repository 'Red Hat Enterprise Linux 7 Server - Optional RPMs x86_64 7Server'
+hammer content-view add-repository --organization $ORG --name 'RHEL 7' --product 'Red Hat Enterprise Linux Server' --repository 'Red Hat Enterprise Linux 7 Server - Extras RPMs x86_64'
+hammer content-view puppet-module add --organization $ORG --content-view 'RHEL 7' --author puppetlabs --name stdlib
+hammer content-view puppet-module add --organization $ORG --content-view 'RHEL 7' --author puppetlabs --name concat
+hammer content-view puppet-module add --organization $ORG --content-view 'RHEL 7' --author puppetlabs --name ntp
+hammer content-view puppet-module add --organization $ORG --content-view 'RHEL 7' --author saz --name ssh
+time hammer content-view publish --organization $ORG --name 'RHEL 7' --description 'Initial Publishing' 2>/dev/null
+time hammer content-view version promote --organization $ORG --content-view 'RHEL 7' --to-lifecycle-environment DEV_RHEL_7  2>/dev/null
+echo " "
+echo "***********************************************"
+echo "CREATE A CONTENT VIEW FOR RHEL 7 CAPSULES:"
+echo "***********************************************"
+hammer content-view create --organization $ORG --name 'RHEL7-Capsule' --label 'RHEL7-Capsule' --description 'Satellite Capsule'
+hammer content-view add-repository --organization $ORG --name 'RHEL7-Capsule' --product 'Red Hat Enterprise Linux Server' --repository 'Red Hat Enterprise Linux 7 Server RPMs x86_64 7Server'
+hammer content-view add-repository --organization $ORG --name 'RHEL7-Capsule' --product 'Red Hat Enterprise Linux Server' --repository 'Red Hat Enterprise Linux 7 Server Kickstart x86_64 7.6'
+hammer content-view add-repository --organization $ORG --name 'RHEL7-Capsule' --product 'Red Hat Enterprise Linux Server' --repository 'Red Hat Satellite Tools 6.4 for RHEL 7 Server RPMs x86_64'
+hammer content-view add-repository --organization $ORG --name 'RHEL7-Capsule' --product 'Red Hat Enterprise Linux Server' --repository 'Red Hat Enterprise Linux 7 Server - Optional RPMs x86_64 7Server'
+hammer content-view add-repository --organization $ORG --name 'RHEL7-Capsule' --product 'Red Hat Software Collections for RHEL Server' --repository 'Red Hat Software Collections RPMs for Red Hat Enterprise Linux 7 Server x86_64 7Server'
+hammer content-view add-repository --organization $ORG --name 'RHEL7-Capsule' --product 'Red Hat Satellite Capsule' --repository 'Red Hat Satellite Capsule 6.4 for RHEL 7 Server RPMs x86_64'
+hammer content-view add-repository --organization $ORG --name 'RHEL7-Capsule' --product 'Red Hat Satellite Capsule' --repository 'Red Hat Satellite Capsule 6.4 - Puppet 4 for RHEL 7 Server RPMs x86_64'
+hammer content-view puppet-module add --organization $ORG --content-view 'RHEL7-Capsule' --author puppetlabs --name stdlib
+hammer content-view puppet-module add --organization $ORG --content-view 'RHEL7-Capsule' --author puppetlabs --name concat
+hammer content-view puppet-module add --organization $ORG --content-view 'RHEL7-Capsule' --author puppetlabs --name ntp
+hammer content-view puppet-module add --organization $ORG --content-view 'RHEL7-Capsule' --author saz --name ssh
+time hammer content-view publish --organization $ORG --name 'RHEL7-Capsule' --description 'Initial Publishing' 2>/dev/null
+time hammer content-view version promote --organization $ORG --content-view 'RHEL7-Capsule' --to-lifecycle-environment DEV_RHEL_7  2>/dev/null
+echo " "
+echo "***********************************************"
+echo "CREATE A CONTENT VIEW FOR RHEL 7 Hypervisor:"
+echo "***********************************************"
+hammer content-view create --organization $ORG --name 'RHEL7-Hypervisor' --label 'RHEL7-Hypervisor' --description ''
+hammer content-view add-repository --organization $ORG --name 'RHEL7-Hypervisor' --product 'Red Hat Enterprise Linux Server' --repository 'Red Hat Enterprise Linux 7 Server RPMs x86_64 7Server'
+hammer content-view add-repository --organization $ORG --name 'RHEL7-Hypervisor' --product 'Red Hat Enterprise Linux Server' --repository 'Red Hat Satellite Tools 6.4 for RHEL 7 Server RPMs x86_64'
+hammer content-view add-repository --organization $ORG --name 'RHEL7-Hypervisor' --product 'Red Hat Virtualization' --repository 'Red Hat Virtualization 4 Management Agents for RHEL 7 RPMs x86_64 7Server'
+hammer content-view puppet-module add --organization $ORG --content-view 'RHEL7-Hypervisor' --author puppetlabs --name stdlib
+hammer content-view puppet-module add --organization $ORG --content-view 'RHEL7-Hypervisor' --author puppetlabs --name concat
+hammer content-view puppet-module add --organization $ORG --content-view 'RHEL7-Hypervisor' --author puppetlabs --name ntp
+time hammer content-view publish --organization $ORG --name 'RHEL7-Hypervisor' --description 'Initial Publishing' 2>/dev/null
+time hammer content-view version promote --organization $ORG --content-view 'RHEL7-Hypervisor' --to-lifecycle-environment DEV_RHEL_7  2>/dev/null
+echo " "
+echo "***********************************************"
+echo "CREATE A CONTENT VIEW FOR RHEL 7 Builder:"
+echo "***********************************************"
+hammer content-view create --organization $ORG --name 'RHEL7-Builder' --label RHEL7-Builder --description 'RHEL7-Builder'
+hammer content-view add-repository --organization $ORG --name 'RHEL7-Builder' --product 'Red Hat Enterprise Linux Server' --repository 'Red Hat Enterprise Linux 7 Server RPMs x86_64 7Server'
+hammer content-view add-repository --organization $ORG --name 'RHEL7-Builder' --product 'Red Hat Enterprise Linux Server' --repository 'Red Hat Enterprise Linux 7 Server Kickstart x86_64 7.6'
+hammer content-view add-repository --organization $ORG --name 'RHEL7-Builder' --product 'Red Hat Enterprise Linux Server' --repository 'Red Hat Satellite Tools 6.4 for RHEL 7 Server RPMs x86_64'
+hammer content-view add-repository --organization $ORG --name 'RHEL7-Builder' --product 'Red Hat Software Collections for RHEL Server' --repository 'Red Hat Software Collections RPMs for Red Hat Enterprise Linux 7 Server x86_64 7Server'
+hammer content-view add-repository --organization $ORG --name 'RHEL7-Builder' --product 'Red Hat Enterprise Linux Server' --repository 'Red Hat Enterprise Linux 7 Server - Supplementary RPMs x86_64 7Server'
+hammer content-view add-repository --organization $ORG --name 'RHEL7-Builder' --product 'Red Hat Enterprise Linux Server' --repository 'Red Hat Enterprise Linux 7 Server - RH Common RPMs x86_64 7Server'
+hammer content-view add-repository --organization $ORG --name 'RHEL7-Builder' --product 'Red Hat Enterprise Linux Server' --repository 'Red Hat Enterprise Linux 7 Server - Optional RPMs x86_64 7Server'
+hammer content-view add-repository --organization $ORG --name 'RHEL7-Builder' --product 'Red Hat Enterprise Linux Server' --repository 'Red Hat Enterprise Linux 7 Server - Extras RPMs x86_64'
+hammer content-view add-repository --organization $ORG --name 'RHEL7-Builder' --product 'JBoss Enterprise Application Platform' --repository 'JBoss Enterprise Application Platform 7 RHEL 7 Server RPMs x86_64 7Server'
+hammer content-view add-repository --organization $ORG --name 'RHEL7-Builder' --product 'Maven' --repository 'Maven 7Server'
+hammer content-view add-repository --organization $ORG --name 'RHEL7-Builder' --product 'EPEL' --repository 'EPEL 7 - x86_64'
+hammer content-view add-repository --organization $ORG --name 'RHEL7-Builder' --product $ORG --repository "Packages"
+hammer content-view add-repository --organization $ORG --name 'RHEL7-Builder' --product $ORG --repository "Jenkins"
+hammer content-view puppet-module add --organization $ORG --content-view 'RHEL7-Builder' --author puppetlabs --name stdlib
+hammer content-view puppet-module add --organization $ORG --content-view 'RHEL7-Builder' --author puppetlabs --name concat
+hammer content-view puppet-module add --organization $ORG --content-view 'RHEL7-Builder' --author puppetlabs --name ntp
+hammer content-view puppet-module add --organization $ORG --content-view 'RHEL7-Builder' --author saz --name ssh
+hammer content-view puppet-module add --organization $ORG --content-view 'RHEL7-Builder' --author puppetlabs --name postgresql
+hammer content-view puppet-module add --organization $ORG --content-view 'RHEL7-Builder' --author puppetlabs --name java
+hammer content-view puppet-module add --organization $ORG --content-view 'RHEL7-Builder' --author rtyler --name jenkins
+hammer content-view puppet-module add --organization $ORG --content-view 'RHEL7-Builder' --author camptocamp --name archive
+time hammer content-view publish --organization $ORG --name 'RHEL7-Builder' --description 'Initial Publishing'
+time hammer content-view version promote --organization $ORG --content-view 'RHEL7-Builder' --to-lifecycle-environment DEV_RHEL_7
+echo " "
+echo "***********************************************"
+echo "CREATE A CONTENT VIEW FOR RHEL 7 OSCP:"
+echo "***********************************************"
+hammer content-view create --organization $ORG --name 'RHEL7-Oscp' --label 'RHEL7-Oscp' --description ''
+hammer content-view add-repository --organization $ORG --name 'RHEL7-Oscp' --product 'Red Hat Enterprise Linux Server' --repository 'Red Hat Enterprise Linux 7 Server RPMs x86_64 7Server'
+hammer content-view add-repository --organization $ORG --name 'RHEL7-Oscp' --product 'Red Hat Enterprise Linux Server' --repository 'Red Hat Satellite Tools 6.4 for RHEL 7 Server RPMs x86_64'
+hammer content-view add-repository --organization $ORG --name 'RHEL7-Oscp' --product 'Red Hat Software Collections for RHEL Server' --repository 'Red Hat Software Collections RPMs for Red Hat Enterprise Linux 7 Server x86_64 7Server'
+hammer content-view add-repository --organization $ORG --name 'RHEL7-Oscp' --product 'Red Hat Enterprise Linux Server' --repository 'Red Hat Enterprise Linux 7 Server - Optional RPMs x86_64 7Server'
+hammer content-view add-repository --organization $ORG --name 'RHEL7-Oscp' --product 'Red Hat Enterprise Linux Server' --repository 'Red Hat Enterprise Linux 7 Server - Extras RPMs x86_64'
+hammer content-view add-repository --organization $ORG --name 'RHEL7-Oscp' --product 'Red Hat OpenShift Container Platform' --repository 'Red Hat OpenShift Container Platform 3.9 RPMs x86_64'
+hammer content-view puppet-module add --organization $ORG --content-view 'RHEL7-Oscp' --author puppetlabs --name stdlib
+hammer content-view puppet-module add --organization $ORG --content-view 'RHEL7-Oscp' --author puppetlabs --name concat
+hammer content-view puppet-module add --organization $ORG --conten30t-view 'RHEL7-Oscp' --author puppetlabs --name ntp
+hammer content-view puppet-module add --organization $ORG --content-view 'RHEL7-Oscp' --author saz --name ssh
+hammer content-view puppet-module add --organization $ORG --content-view 'RHEL7-Oscp' --author cristifalcas --name kubernetes
+hammer content-view puppet-module add --organization $ORG --content-view 'RHEL7-Oscp' --author cristifalcas --name etcd
+hammer content-view puppet-module add --organization $ORG --content-view 'RHEL7-Oscp' --author LunetIX --name docker
+hammer content-view puppet-module add --organization $ORG --content-view 'RHEL7-Oscp' --author crayfishx --name firewalld
+time hammer content-view publish --organization $ORG --name 'RHEL7-Oscp' --description 'Initial Publishing'
+time hammer content-view version promote --organization $ORG --content-view 'RHEL7-Oscp' --to-lifecycle-environment DEV_RHEL_7
+echo " "
+echo "***********************************************"
+echo "CREATE A CONTENT VIEW FOR RHEL 7 DOCKER:"
+echo "***********************************************"
+hammer content-view create --organization $ORG --name 'RHEL7-Docker' --label 'RHEL7-Docker' --description ''
+hammer content-view add-repository --organization $ORG --name 'RHEL7-Docker' --product 'Red Hat Enterprise Linux Server' --repository 'Red Hat Enterprise Linux 7 Server RPMs x86_64 7Server'
+hammer content-view add-repository --organization $ORG --name 'RHEL7-Docker' --product 'Red Hat Enterprise Linux Server' --repository 'Red Hat Satellite Tools 6.4 for RHEL 7 Server RPMs x86_64'
+hammer content-view add-repository --organization $ORG --name 'RHEL7-Docker' --product 'Red Hat Software Collections for RHEL Server' --repository 'Red Hat Software Collections RPMs for Red Hat Enterprise Linux 7 Server x86_64 7Server'
+hammer content-view add-repository --organization $ORG --name 'RHEL7-Docker' --product 'Red Hat Enterprise Linux Server' --repository 'Red Hat Enterprise Linux 7 Server - Optional RPMs x86_64 7Server'
+hammer content-view add-repository --organization $ORG --name 'RHEL7-Docker' --product 'Red Hat Enterprise Linux Server' --repository 'Red Hat Enterprise Linux 7 Server - Extras RPMs x86_64'
+hammer content-view add-repository --organization $ORG --name 'RHEL7-Docker' --product 'Red Hat OpenShift Container Platform' --repository 'Red Hat OpenShift Container Platform 3.9 RPMs x86_64'
+hammer content-view add-repository --organization $ORG --name 'RHEL7-Docker' --product 'JBoss Enterprise Application Platform' --repository 'JBoss Enterprise Application Platform 7 RHEL 7 Server RPMs x86_64 7Server'
+hammer content-view puppet-module add --organization $ORG --content-view 'RHEL7-Docker' --author puppetlabs --name stdlib
+hammer content-view puppet-module add --organization $ORG --content-view 'RHEL7-Docker' --author puppetlabs --name concat
+hammer content-view puppet-module add --organization $ORG --content-view 'RHEL7-Docker' --author puppetlabs --name ntp
+hammer content-view puppet-module add --organization $ORG --content-view 'RHEL7-Docker' --author saz --name ssh
+hammer content-view puppet-module add --organization $ORG --content-view 'RHEL7-Docker' --author cristifalcas --name kubernetes
+hammer content-view puppet-module add --organization $ORG --content-view 'RHEL7-Docker' --author cristifalcas --name etcd
+hammer content-view puppet-module add --organization $ORG --content-view 'RHEL7-Docker' --author cristifalcas --name docker
+hammer content-view puppet-module add --organization $ORG --content-view 'RHEL7-Docker' --author crayfishx --name firewalld
+hammer content-view puppet-module add --organization $ORG --content-view 'RHEL7-Docker' --author LunetIX --name dockerhost
+time hammer content-view publish --organization $ORG --name 'RHEL7-Docker' --description 'Initial Publishing'
+time hammer content-view version promote --organization $ORG --content-view 'RHEL7-Docker' --to-lifecycle-environment DEV_RHEL_7
+echo '#-------------------------------'
+echo 'RHEL6 CONTENT VIEW'
+echo '#-------------------------------'
+echo " "
+echo "***********************************************"
+echo "CREATE A CONTENT VIEW FOR RHEL 6:"
+echo "***********************************************"
+hammer content-view create --organization $ORG --name 'RHEL6' --label 'RHEL6' --description 'Core Build for RHEL 6'
+hammer content-view add-repository --organization $ORG --name 'RHEL6_Base' --product 'Red Hat Enterprise Linux Server' --repository 'Red Hat Enterprise Linux 6 Server RPMs x86_64 6Server'
+hammer content-view add-repository --organization $ORG --name 'RHEL6_Base' --product 'Red Hat Enterprise Linux Server' --repository 'Red Hat Satellite Tools 6.4 for RHEL 6 Server RPMs x86_64'
+hammer content-view puppet-module add --organization $ORG --content-view 'RHEL6_Base' --author puppetlabs --name stdlib
+hammer content-view puppet-module add --organization $ORG --content-view 'RHEL6_Base' --author puppetlabs --name concat
+hammer content-view puppet-module add --organization $ORG --content-view 'RHEL6_Base' --author puppetlabs --name ntp
+hammer content-view puppet-module add --organization $ORG --content-view 'RHEL6_Base' --author saz --name ssh
+time hammer content-view publish --organization $ORG --name 'RHEL6_Base' --description 'Initial Publishing' 2>/dev/null
+time hammer content-view version promote --organization $ORG --content-view 'RHEL6_Base' --to-lifecycle-environment DEV_RHEL_6  2>/dev/null
+echo '#-------------------------------'
+echo 'RHEL5 CONTENT VIEW'
+echo '#-------------------------------'
+echo " "
+echo "***********************************************"
+echo "CREATE A CONTENT VIEW FOR RHEL 5:"
+echo "***********************************************"
+hammer content-view create --organization $ORG --name 'RHEL5' --label 'RHEL5' --description 'Core Build for RHEL 5'
+hammer content-view add-repository --organization $ORG --name 'RHEL5' --product 'Red Hat Enterprise Linux Server' --repository 'Red Hat Enterprise Linux 5 Server RPMs x86_64 6Server'
+hammer content-view add-repository --organization $ORG --name 'RHEL5' --product 'Red Hat Enterprise Linux Server' --repository 'Red Hat Satellite Tools 6.4 for RHEL 5 Server RPMs x86_64'
+hammer content-view puppet-module add --organization $ORG --content-view 'RHEL5' --author puppetlabs --name stdlib
+hammer content-view puppet-module add --organization $ORG --content-view 'RHEL5' --author puppetlabs --name concat
+hammer content-view puppet-module add --organization $ORG --content-view 'RHEL5' --author puppetlabs --name ntp
+hammer content-view puppet-module add --organization $ORG --content-view 'RHEL5' --author saz --name ssh
+time hammer content-view publish --organization $ORG --name 'RHEL5' --description 'Initial Publishing' 2>/dev/null
+time hammer content-view version promote --organization $ORG --content-view 'RHEL5' --to-lifecycle-environment DEV_RHEL_5  2>/dev/null
+}

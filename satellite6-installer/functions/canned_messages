@@ -1,0 +1,69 @@
+CANNED_MESSAGES {
+#NOTE: Jenkins, CentOS-7  Puppet Forge, Icinga, and Maven are examples of setting up a custom repository
+#---START OF REPO CONFIGURE AND SYNC SCRIPT---
+source /root/.bashrc
+QMESSAGE5="Would you like to enable and sync RHEL 5 Content
+This will enable
+ Red Hat Enterprise Linux 5 Server (Kickstart)
+ Red Hat Enterprise Linux 5 Server
+ Red Hat Satellite Tools 6.4 (for RHEL 5 Server)
+ Red Hat Software Collections RPMs for Red Hat Enterprise Linux 5 Server
+ Red Hat Enterprise Linux 5 Server - Extras
+ Red Hat Enterprise Linux 5 Server - Optional
+ Red Hat Enterprise Linux 5 Server - Supplementary
+ Red Hat Enterprise Linux 5 Server - RH Common
+ Extra Packages for Enterprise Linux 5"
+
+QMESSAGE6="Would you like to enable and sync RHEL 6 Content
+This will enable
+ Red Hat Enterprise Linux 6 Server (Kickstart)
+ Red Hat Enterprise Linux 6 Server
+ Red Hat Satellite Tools 6.4 (for RHEL 6 Server)
+ Red Hat Software Collections RPMs for Red Hat Enterprise Linux 6 Server
+ Red Hat Enterprise Linux 6 Server - Extras
+ Red Hat Enterprise Linux 6 Server - Optional
+ Red Hat Enterprise Linux 6 Server - Supplementary
+ Red Hat Enterprise Linux 6 Server - RH Common
+ Extra Packages for Enterprise Linux 6"
+
+QMESSAGE7="Would you like to enable and sync RHEL 7 Content
+This will enable:
+ Red Hat Enterprise Linux 7 Server (Kickstart)
+ Red Hat Enterprise Linux 7 Server
+ Red Hat Satellite Tools 6.4 (for RHEL 7 Server)
+ Red Hat Software Collections RPMs for Red Hat Enterprise Linux 7 Server
+ Red Hat Enterprise Linux 7 Server - Extras
+ Red Hat Enterprise Linux 7 Server - Optional
+ Red Hat Enterprise Linux 7 Server - Supplementary
+ Red Hat Enterprise Linux 7 Server - RH Common
+ Extra Packages for Enterprise Linux 7"
+
+QMESSAGEJBOSS="Would you like to download JBoss Enterprise Application Platform 7 (RHEL 7 Server) content"
+QMESSAGEVIRTAGENT="Would you like to download Red Hat Virtualization 4 Management Agents for RHEL 7 content"
+QMESSAGESAT64="Would you like to download Red Hat Satellite 6.4 (for RHEL 7 Server) content"
+QMESSAGECAP64="Would you like to download Red Hat Satellite Capsule 6.4 (for RHEL 7 Server) content"
+QMESSAGEOSC="Would you like to download Red Hat OpenShift Container Platform 3.10 content"
+QMESSAGECEPH="Would you like to download Red Hat Ceph Storage Tools 3.0 for Red Hat Enterprise Linux 7 Server content"
+QMESSAGESNC="Would you like to download Red Hat Storage Native Client for RHEL 7 content"
+QMESSAGECSI="Would you like to download Red Hat Ceph Storage Installer 3.0 for Red Hat Enterprise Linux 7 Server content"
+QMESSAGEOSP="Would you like to download Red Hat OpenStack Platform 13 for RHEL 7 content"
+QMESSAGEOSPT="Would you like to download Red Hat OpenStack Tools 7.0 for Red Hat Enterprise Linux 7 Server content"
+QMESSAGERHVH="Would you like to download Red Hat Virtualization Host 7 content"
+QMESSAGERHVM="Would you like to download Red Hat Virtualization Manager 4.2 (RHEL 7 Server) content"
+QMESSAGEATOMIC="Would you like to download Red Hat Enterprise Linux Atomic Host content"
+QMESSAGETOWER="Would you like to download Ansible Tower custom content"
+QMESSAGEPUPPET="Would you like to download Puppet Forge custom content"
+QMESSAGEJENKINS="Would you like to download JENKINS custom content"
+QMESSAGEMAVEN="Would you like to download Maven custom content"
+QMESSAGEICINGA="Would you like to download Icinga custom content"
+QMESSAGEICENTOS7="Would you like to download CentOS-7 custom content"
+
+YMESSAGE="Adding avalable content. This step will take the longest,
+(Depending on your network)"
+NMESSAGE="Skipping avalable content"
+FMESSAGE="PLEASE ENTER Y or N"
+COUNTDOWN=15
+OTHER7REPOSDEFAULTVALUE=n
+RHEL7DEFAULTVALUE=y
+PUPPETDEFAULTVALUE=y
+}

@@ -1,0 +1,29 @@
+function SATUPDATE {
+#-------------------------------
+echo " "
+echo "*********************************************************"
+echo "Upgrading/Updating Satellite 6.3 to 6.4"
+echo "*********************************************************"
+echo " "
+subscription-manager repos --disable '*'
+subscription-manager repos --enable=rhel-7-server-rpms
+subscription-manager repos --enable=rhel-server-rhscl-7-rpms
+subscription-manager repos --enable=rhel-7-server-satellite-6.4-rpms
+subscription-manager repos --enable=rhel-7-server-satellite-maintenance-6-rpms
+yum-config-manager --setopt=\*.skip_if_unavailable=1 --save \*
+foreman-rake foreman_tasks:cleanup TASK_SEARCH='label = Actions::Katello::Repository::Sync' STATES='paused,pending,stopped' VERBOSE=true
+foreman-rake katello:delete_orphaned_content --trace
+foreman-rake katello:reindex --trace
+katello-service stop
+katello-selinux-disable
+setenforce 0
+service firewalld stop
+yum upgrade -y --skip-broken --setopt=protected_multilib=false ; yum update -y --skip-broken --setopt=protected_multilib=false
+yum -q list installed puppetserver &>/dev/null && echo "puppetserver is installed" || time yum install puppetserver -y --skip-broken --setopt=protected_multilib=false
+yum -q list installed puppet-agent-oauth &>/dev/null && echo "puppet-agent-oauth is installed" || time yum install puppet-agent-oauth -y --skip-broken --setopt=protected_multilib=false
+yum -q list installed puppet-agent &>/dev/null && echo "puppet-agent is installed" || time yum install puppet-agent -y --skip-broken --setopt=protected_multilib=false
+satellite-installer -v --scenario satellite --upgrade
+foreman-rake apipie:cache:index --trace
+hammer template build-pxe-default
+for i in $(hammer capsule list |awk -F '|' '{print $1}' |grep -v ID|grep -v -) ; do hammer capsule refresh-features --id=$i ; done
+}

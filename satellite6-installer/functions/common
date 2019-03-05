@@ -1,0 +1,126 @@
+function GENERALSETUP {
+#----------------------------------
+echo ""
+echo "*********************************************************"
+echo 'GENERAL SETUP'
+echo "*********************************************************"
+echo -ne "\e[8;40;170t"
+source /root/.bashrc
+echo " "
+
+echo "*********************************************************"
+echo "GENERATE USERS AND SYSTEM KEYS FOR REQUIRED USERS"
+echo "*********************************************************"
+echo ""
+echo "*********************************************************"
+echo "SETTING UP ADMIN"
+echo "*********************************************************"
+groupadd admin
+useradd admin -g admin -m -p $ADMIN
+mkdir -p /home/admin/.ssh
+mkdir -p /home/admin/git
+chown -R admin:admin /home/admin
+sudo -u admin ssh-keygen -f /home/admin/.ssh/id_rsa -N ''
+echo " "
+
+echo "*********************************************************"
+echo "SETTING UP FOREMAN-PROXY"
+echo "*********************************************************"
+useradd -M foreman-proxy
+usermod -L foreman-proxy
+mkdir -p /usr/share/foreman-proxy/.ssh
+sudo -u foreman-proxy ssh-keygen -f /usr/share/foreman-proxy/.ssh/id_rsa_foreman_proxy -N ''
+chown -R foreman-proxy:foreman-proxy /usr/share/foreman-proxy
+echo " "
+
+echo "*********************************************************"
+echo "ROOT"
+echo "*********************************************************"
+ssh-keygen -f /root/.ssh/id_rsa -t rsa -N ''
+echo " "
+
+echo "*********************************************************"
+echo “SET DOMAIN”
+echo "*********************************************************"
+cp /etc/sysctl.conf /etc/sysctl.conf.bak
+echo 'inet.ipv4.ip_forward=1' >> /etc/sysctl.conf
+echo "kernel.domainname=$DOM" >> /etc/sysctl.conf
+echo " "
+
+echo "*********************************************************"
+echo "GENERATE /ETC/HOSTS"
+echo "*********************************************************"
+cp /etc/hosts /etc/hosts.bak
+echo "${SAT_IP} $(hostname)" >>/etc/hosts
+echo " "
+
+echo "*********************************************************"
+echo "ADDING KATELLO-CVMANAGER TO /HOME/ADMIN/GIT "
+echo "*********************************************************"
+cd /home/admin/git
+git clone https://github.com/RedHatSatellite/katello-cvmanager.git
+cd
+mkdir -p /root/.hammer
+echo " "
+
+echo "*********************************************************"
+echo "SETTING ADMIN USER TO NO PASSWORD FOR SUDO"
+echo "*********************************************************"
+cp /etc/sudoers /etc/sudoers.bak
+echo 'admin ALL = NOPASSWD: ALL' >> /etc/sudoers
+echo " "
+}
+#  --------------------------------------
+function SYSCHECK {
+#  --------------------------------------
+echo " "
+echo "*********************************************************"
+echo "CHECKING ALL REQUIREMENTS HAVE BEEN MET"
+echo "*********************************************************"
+echo " "
+echo "*********************************************************"
+echo "CHECKING FQDN"
+echo "*********************************************************"
+hostname -f
+if [ $? -eq 0 ]; then
+    echo 'The FQDN is as expected $(hostname)'
+else
+    echo "The FQDN is not defined please correct and try again"
+    mv /root/.bashrc.bak /root/.bashrc
+    mv /etc/sudoers.bak /etc/sudoers
+    mv /etc/hosts.bak /etc/hosts
+    mv /etc/sysctl.conf.bak /etc/sysctl.conf
+    rm -f ./SCRIPT
+    subscription-manager unregister
+    subscription manager clean
+    sleep 10
+    exit
+sleep 5
+echo " "
+fi
+echo "*********************************************************"
+echo "CHECKING FOR ADMIN USER"
+echo "*********************************************************"
+getent passwd admin > /dev/null 2&>1
+if [ $? -eq 0 ]; then
+    echo "yes the admin user exists"
+else
+    echo "No, the user does not exist
+    The user does not exist please create a admin user
+    and try again."
+    exit
+sleep 5
+echo " "
+fi
+}
+
+function STOPSPAMMINGVARLOG {
+#-------------------------------
+source /root/.bashrc
+echo -ne "\e[8;40;170t"
+echo "*********************************************************"
+echo "STOP THE LOG SPAMMING OF /VAR/LOG/MESSAGES WITH SLICE"
+echo "*********************************************************"
+echo 'if $programname == "systemd" and ($msg contains "Starting Session" or $msg contains "Started Session" or $msg contains "Created slice" or $msg contains "Starting user-" or $msg contains "Starting User Slice of" or $msg contains "Removed session" or $msg contains "Removed slice User Slice of" or $msg contains "Stopping User Slice of") then stop' > /etc/rsyslog.d/ignore-systemd-session-slice.conf
+systemctl restart rsyslog
+}

@@ -1,0 +1,27 @@
+#------------------------------
+function HAMMERCONF {
+#------------------------------
+echo "*********************************************************"
+echo "CONFIGURING HAMMER"
+echo "*********************************************************"
+echo -ne "\e[8;40;170t"
+source /root/.bashrc
+echo "*********************************************************"
+echo "Enabling Hammer for Satellite configuration tasks"
+echo "Setting up hammer will list the Satellite username and password in the /root/.hammer/cli_config.yml file
+with default permissions set to -rw-r--r--, if this is a security concern it is recommended the file is
+deleted once the setup is complete"
+echo "*********************************************************"
+read -p "Press [Enter] to continue"
+sleep 10
+cat > /root/.hammer/cli_config.yml<< EOF
+:foreman:
+ :host: 'https://$(hostname -f)'
+ :username: '$ADMIN'
+ :password: '$ADMIN_PASSWORD'
+:log_dir: '/var/log/foreman'
+:log_level: 'error'
+EOF
+sed -i 's/example/redhat/g' /etc/hammer/cli.modules.d/foreman.yml
+sed -i 's/#:password/:password/g' /etc/hammer/cli.modules.d/foreman.yml
+}
