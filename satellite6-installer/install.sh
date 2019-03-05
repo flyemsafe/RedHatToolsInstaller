@@ -2,13 +2,21 @@
 #POC/Demo
 
 # import functions
-for source in $(ls ./functions)
+ROOT_DIR=$(pwd)
+
+if [ ! -d ${ROOT_DIR}/functions ]
+then
+    echo "could not fin ${ROOT_DIR}/functions"
+    exit 1
+fi
+
+for i in $(ls ${ROOT_DIR}/functions)
 do
-    source ./functions/$source 
+    source ${ROOT_DIR}/functions/${i}
 done 
 
 # Welcome message
-WELCOME_MSG
+#WELCOME_MSG
 
 # Check for root
 if [ "$(whoami)" != "root" ]
@@ -19,13 +27,21 @@ fi
 
 
 # Register system and enable repos
-REDHAT_SUBSCRIPTIONS
+#REDHAT_SUBSCRIPTIONS
 
 # Get GUI Requirements
-GUI_REQUIREMENTS
+#GUI_REQUIREMENTS
 
 # Ask user for information
-COLLECT_VARIABLES_DIALOG
+COLLECT_SATELLITE_PRIMARY_VARIABLES
+IPA
+CAPSULE
+SATLIBVIRT
+SATRHV
+RHVORLIBVIRT
+DEFAULTMSG
+SYNCREL5
+SYNCREL6
 
 YMESSAGE="Adding to /root/.bashrc vars"
 NMESSAGE="Skipping"

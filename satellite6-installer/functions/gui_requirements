@@ -49,7 +49,6 @@ function GUI_REQUIREMENTS {
     yum install -y dconf*
     touch ./SCRIPT
     echo " "
-    }
     ls ./SCRIPT
     if [ $? -eq 0 ]; then
         echo 'The requirements to run this script have been met, proceeding'

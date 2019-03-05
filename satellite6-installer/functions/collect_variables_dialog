@@ -1,4 +1,4 @@
-function COLLECT_VARIABLES_DIALOG {
+function COLLECT_SATELLITE_PRIMARY_VARIABLES {
 #-------------------------------
 echo ""
 echo "*********************************************************"
@@ -135,7 +135,8 @@ read -n1 -p "Do you have an IPA server? Y/N " INPUT
 INPUT=${INPUT:-$DEFAULTVALUE}
 if  [ "$INPUT" = "y" -o "$INPUT" = "Y" ] ;then
 echo -e "\n$YMESSAGE\n"
-yum install -y ipa-client ipa-admintools
+#TODO: set a variable to install this later on
+#yum install -y ipa-client ipa-admintools
 echo 'What is the FQDN of the IPA Server?'
 read  FQDNIPA
 echo 'IPA_SERVER='$FQDNIPA'' >> /root/.bashrc
@@ -151,7 +152,7 @@ echo -e "\n$NMESSAGE\n"
 #COMMANDEXECUTION
 else
 echo -e "\n$FMESSAGE\n"
-REQUEST
+#REQUEST
 fi
 }
 
@@ -178,7 +179,7 @@ echo -e "\n$NMESSAGE\n"
 #COMMANDEXECUTION
 else
 echo -e "\n$FMESSAGE\n"
-REQUEST
+#REQUEST
 fi
 }
 #-------------------------------
@@ -211,7 +212,7 @@ echo 'CONFIGURE_LIBVIRT_RESOURCE=false' >> /root/.bashrc
 #COMMANDEXECUTION
 else
 echo -e "\n$FMESSAGE\n"
-REQUEST
+#REQUEST
 fi
 }
 #-------------------------------
@@ -248,7 +249,7 @@ echo 'CONFIGURE_RHEV_RESOURCE=false' >> /root/.bashrc
 #COMMANDEXECUTION
 else
 echo -e "\n$FMESSAGE\n"
-REQUEST
+#REQUEST
 fi
 }
 # This script alternatively allows to use a RHV virtualization backend using the following parameters
@@ -304,7 +305,7 @@ echo 'RHEL5DEFAULTVALUE=n' >> /root/.bashrc
 #COMMANDEXECUTION
 else
 echo -e "\n$FMESSAGE\n"
-REQUEST
+#REQUEST
 fi
 }
 #-------------------------------
@@ -326,6 +327,6 @@ echo 'RHEL6DEFAULTVALUE=n' >> /root/.bashrc
 #COMMANDEXECUTION
 else
 echo -e "\n$FMESSAGE\n"
-REQUEST
+#REQUEST
 fi
 }
