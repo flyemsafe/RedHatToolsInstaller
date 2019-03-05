@@ -1,602 +1,29 @@
-#!/bin/bash
-#POC/Demo
-echo -ne "\e[8;40;170t"
-
-# Hammer referance to assist in modifing the script can be found at 
-# https://www.gitbook.com/book/abradshaw/getting-started-with-satellite-6-command-line/details
-
-
-reset
-
-#--------------------------required packages for script to run----------------------------
-
-echo " "
-echo " "
-echo " "
-echo " "
-echo " "
-echo " "
-echo " "
-echo " "
-echo " "
-echo "
-
-                           P.O.C Satellite 6.X RHEL 7.X KVM or RHEL 7 Physical Host 
-                              THIS SCRIPT CONTAINS NO CONFIDENTIAL INFORMATION
-
-                  This script is designed to set up a basic standalone Satellite 6.X system
-
-             Disclaimer: This script was written for education, evaluation, and/or testing purposes. 
-    This helper script is Licensed under GPL and there is no implied warranty and is not officially supported by anyone.
-                                 
-         ...SHOULD NOT BE USED ON A CURRENTlY OPERATING PRODUCTION SYSTEM - USE AT YOUR OWN RISK...
-         Satellite 6.4 requirements can be found at 
-
-
-   However the if you have an issue with the products installed and have a valid License please contact Red Hat at:
-
-   RED HAT Inc..
-   1-888-REDHAT-1 or 1-919-754-3700, then select the Menu Prompt for Customer Service
-   Spanish: 1-888-REDHAT-1 Option 5 or 1-919-754-3700 Option 5
-   Fax: 919-754-3701 (General Corporate Fax)
-   Email address: customerservice@redhat.com "
-
-echo " "
-echo " "
-echo " "
-echo " "
-echo " "
-echo " "
-echo " "
-echo " "
-echo " "
-echo " "
-echo " "
-echo " "
-echo " "
-echo " "
-echo " "
-read -p "Press [Enter] to continue"
-clear
-echo " "
-echo " "
-echo " "
-echo " "
-echo " "
-echo " "
-echo " "
-echo " "
-echo " "
-echo "
 
 
 
-                          JUST A REVIEW
-                          This is a Proof Of Concept script for the purposes of evaluation
-                          and/or training.
-                          Requirements for this script to work:
-                           * RHEL 7.6 Base install or Server with UI
-                           * A Baremetal or VM (Snap shot this system in case you want 
-                             to change something and run again)
-                           * System
-                              4 PROC
-                              22 GB RAM
-                              250 GB Storage
-                           * Basic Partitioning on LVM
-                              /  (root) 
-                              /boot
-                              swap 
-                           * An external network connection 
-                           * A subscription to Satellite 
-                              In another window you will need to obtain your account Satellite pool ID from: 
-                              ' subscription-manager list --available ' save that incase you are prompted for the it
-                           * Manifest created with some entitlements and downloaded from:
-                            https://access.redhat.com/management/subscription_allocations/
-                           * The manifest placed in a directory /home/admin/Downloads
-                           * Lastly this script 
-                               "
 
 
-echo " "
-echo " "
-echo " "
-echo " "
-echo " "
-echo " "
-echo " "
-echo " "
-read -p "Press [Enter] to continue"
-clear
-if [ "$(whoami)" != "root" ]
-then
-echo "This script must be run as root - if you do not have the credentials please contact your administrator"
-exit
-fi
+
 
 #--------------------------required packages for script to run----------------------------
 #------------------
 function SCRIPT {
-#------------------
-echo ""
-echo "*************************************************************"
-echo " Script configuration requirements installing for this server"
-echo "*************************************************************"
-echo "*********************************************************"
-echo "SET SELINUX TO PERMISSIVE FOR THE INSTALL AND CONFIG OF SATELLITE"
-echo "*********************************************************"
-echo "In order for the script to work properly we need to eisable Selinux and the firewall."
-read -p "Enter yY disable selinux and stop the firewall " -n 1 -r
-if [[ $REPLY =~ ^[Yy]$ ]]
-then
-    sed -i 's/SELINUX=enforcing/SELINUX=permissive/g' /etc/selinux/config
-    setenforce 0
-    service firewalld stop
-    chkconfig firewalld off
-    HNAME=$(hostname)
-    DOM="$(hostname -d)"
-    service firewalld stop
-    setenforce 0
-    mkdir -p /home/admin/Downloads
-fi
-echo ""
-echo "*********************************************************"
-echo "UNREGESTERING SYSTEM"
-echo "*********************************************************"
-echo "To ensure the system has proper entitlements and the ability to enable required repos. If you system is already setup and properly entitled, enter nN for no."
-read -p "Enter yY to unrgister system " -n 1 -r
-if [[ $REPLY =~ ^[Yy]$ ]]
-then
-    subscription-manager unregister
-    subscription-manager clean
-    echo " "
-    echo "*********************************************************"
-    echo "REGESTERING SYSTEM"
-    echo "*********************************************************"
-    subscription-manager register --auto-attach
-    echo " "
-    echo "*********************************************************"
-    echo "NOTE:"
-    echo "*********************************************************"
-    echo "Attaching to your Satellite subscription using the pool id if the predefined value fails please obtain your pool id in another terminal running:
 
-       subscription-manager list --available
-       or 
-       subscription-manager list --available --matches 'Red Hat Satellite'"
-    echo " "
-    read -p "Press [Enter] 32 digit pool id if prompted "
-    echo " "
-    subscription-manager attach --pool=`subscription-manager list --available --matches 'Red Hat Satellite Infrastructure Subscription' --pool-only`
-    if [ $? -eq 0 ]; then
-        echo 'Attaching Red Hat Satellite Infrastructure Subscription'
-    else
-        echo 'None of the predefined Satellite Pool IDs worked please enter your 32 digit alphanumeric Pool ID'
-        read POOLID
-        subscription-manager attach --pool=`POOLID`
-        echo " "
-    fi
-    echo " "
-    echo "*********************************************************"
-    echo "SET REPOS ENABLING THE REDHATTOOLSINSTALLER SCRIPT TO RUN"
-    echo "*********************************************************"
-    subscription-manager repos --disable "*" || exit 1
-    subscription-manager repos --enable=rhel-7-server-rpms || exit 1
-    subscription-manager repos --enable=rhel-7-server-extras-rpms || exit 1
-    subscription-manager repos --enable=rhel-7-server-optional-rpms || exit 1
-fi
-echo ""
-echo "Enabling EPEL to enable packages required for this script to succeed, enter nN to skip this if you already have epel enabled."
-read -p "Enter yY to setup epel" -n 1 -r
-if [[ $REPLY =~ ^[Yy]$ ]]
-then
-    yum -q list installed epel-release-latest-7 &>/dev/null && echo "epel-release-latest-7 is installed" || yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm --skip-broken
-    yum -q list installed yum-utils &>/dev/null && echo "yum-utils is installed" || yum install -y yum-util* --skip-broken
-    yum-config-manager --enable epel 
-    yum-config-manager --save --setopt=*.skip_if_unavailable=true
-    rm -fr /var/cache/yum/*
-    yum clean all
-fi
-echo " "
-echo "*********************************************************"
-echo "INSTALLING PACKAGES ENABLING SCRIPT TO RUN"
-echo "*********************************************************"
-yum -q list installed gtk2-devel &>/dev/null && echo "gtk2-devel is installed" || yum install -y gtk2-devel --skip-broken
+
 yum -q list installed wget &>/dev/null && echo "wget is installed" || yum install -y wget --skip-broken
 yum -q list installed firewalld &>/dev/null && echo "firewalld is installed" || yum install -y firewalld --skip-broken
-yum -q list installed ansible &>/dev/null && echo "ansible is installed" || yum install -y ansible --skip-broken 
-yum -q list installed gnome-terminal &>/dev/null && echo "gnome-terminal is installed" || yum install -y gnome-terminal --skip-broken
+yum -q list installed ansible &>/dev/null && echo "ansible is installed" || yum install -y ansible --skip-broken
 yum -q list installed yum &>/dev/null && echo "yum is installed" || yum install -y yum --skip-broken
-yum -q list installed lynx &>/dev/null && echo "lynx is installed" || yum install -y lynx --skip-broken
-yum -q list installed perl &>/dev/null && echo "perl is installed" || yum install -y perl --skip-broken
-yum -q list installed dialog &>/dev/null && echo "dialog is installed" || yum install -y dialog --skip-broken
-yum -q list installed xdialog &>/dev/null && echo "xdialog is installed" || yum localinstall -y xdialog-2.3.1-13.el7.centos.x86_64.rpm --skip-broken
-yum -q list installed firefox &>/dev/null && echo "firefox is installed" || install -y firefox --skip-broken
-yum install -y dconf*
-touch ./SCRIPT
-echo " "
-}
-ls ./SCRIPT
-if [ $? -eq 0 ]; then
-    echo 'The requirements to run this script have been met, proceeding'
-else
-    echo "Installing requirements to run script please stand by"
-    SCRIPT
-    sleep 5
-echo " "
-fi
 
 
-#--------------------------Define Env----------------------------
 
-#configures dialog command for proper environment
 
-if [[ -n $DISPLAY ]]
-then
-# Assume script running under X:windows
-DIALOG=`which Xdialog`
-RC=$?
-if [[ $RC != 0 ]]
-then
-DIALOG=`which dialog`
-RC=$?
-if [[ $RC != 0 ]]
-then
-echo "Error:: Could not locate suitable dialog command: Please install dialog or if running in a desktop install Xdialog."
-subscription-manager unregister
-subscription manager clean
-exit 1
-fi
-fi
-else
-# If Display is no set assume ok to use dialog
-DIALOG=`which dialog`
-RC=$?
-if [[ $RC != 0 ]]
-then
-echo "Error:: Could not locate suitable dialog command: Please install dialog or if running in a desktop install Xdialog."
-subscription-manager unregister
-subscription manager clean
-exit 1
-fi
-fi
-#------------------------------------------------------SCRIPT BEGINS-----------------------------------------------------
-#------------------------------------------------------ Functions ------------------------------------------------------
-#-----------------------------------------------------------------------------------------------------------------------
-#-------------------------------
-function VARIABLES1 {
-#-------------------------------
-echo ""
-echo "*********************************************************"
-echo "COLLECT VARIABLES FOR SAT 6.X"
-echo "*********************************************************"
-cp -p /root/.bashrc /root/.bashrc.bak
-export INTERNAL=$(ip -o link | head -n 2 | tail -n 1 | awk '{print $2}' | sed s/:// )
-export EXTERNAL=$(ip route show | sed -e 's/^default via [0-9.]* dev \(\w\+\).*/\1/' | head -1)
-export INTERNALIP=$(ifconfig "$INTERNAL" | grep "inet" | awk -F ' ' '{print $2}' |grep -v f |awk -F . '{print $1"."$2"."$3"."$4}')
-export INTERNALSUBMASK=$(ifconfig "$INTERNAL" |grep netmask |awk -F " " {'print $4'})
-export INTERNALGATEWAY=$(ip route list type unicast dev $(ip -o link | head -n 2 | tail -n 1 | awk '{print $2;}' | sed s/:$//) |awk -F " " '{print $7}')
-echo "INTERNALIP=$INTERNALIP" >> /root/.bashrc
-echo ""
-echo "*********************************************************"
-echo "ORGANIZATION"
-echo "*********************************************************"
-echo 'What is the name of your Organization?'
-read ORG
-echo 'ORG='$ORG'' >> /root/.bashrc
-echo ""
-echo "*********************************************************"
-echo "LOCATION OF YOUR SATELLITE"
-echo "*********************************************************"
-echo 'LOCATION'
-echo 'What is the location of your Satellite server. Example DENVER'
-read LOC
-echo 'LOC='$LOC'' >> /root/.bashrc
-echo ""
-echo "*********************************************************"
-echo "SETTING DOMAIN"
-echo "*********************************************************"
-echo 'what is your domain name Example:'$(hostname -d)''
-read DOM
-echo 'DOM='$DOM'' >> /root/.bashrc
-echo ""
-echo "*********************************************************"
-echo "ADMIN PASSWORD - WRITE OR REMEMBER YOU WILL BE PROMPTED FOR 
-USER: admin AND THIS PASSWORD WHEN WE IMPORT THE MANIFEST"
-echo "*********************************************************"
-sleep 5
-echo 'ADMIN=admin'  >> /root/.bashrc
-echo 'What will the password be for your admin user?'
-read  ADMIN_PASSWORD
-echo 'ADMIN_PASSWORD='$ADMIN_PASSWORD'' >> /root/.bashrc
-echo ""
-echo "*********************************************************"
-echo "NAME OF FIRST SUBNET"
-echo "*********************************************************"
-echo 'What would you like to call your first subnet for systems you are regestering to satellite?'
-read  SUBNET
-echo 'SUBNET_NAME='$SUBNET'' >> /root/.bashrc
-echo ""
-echo "*********************************************************"
-echo "PROVISIONED NODE PREFIX"
-echo "*********************************************************"
-# The host prefix is used to distinguish the demo hosts created at the end of this script.
-echo 'What would you like the prefix to be for systems you are provisioning with Satellite Example poc- kvm- vm-? enter to skip'
-read  PREFIX
-echo 'HOST_PREFIX='$PREFIX'' >> /root/.bashrc
-echo ""
-echo "*********************************************************"
-echo "NODE PASSWORD"
-echo "*********************************************************"
-echo 'PROVISIONED HOST PASSWORD'
-echo 'Please enter the default password you would like to use for root for your newly provisioned nodes'
-read PASSWORD
-for i in $(echo "$PASSWORD" | openssl passwd -apr1 -stdin); do echo NODEPASS=$i >> /root/.bashrc ; done
 
-export "DHCPSTART=$(ifconfig $INTERNAL | grep "inet" | awk -F ' ' '{print $2}' |grep -v f |awk -F . '{print $1"."$2"."$3"."2}')"
-export "DHCPEND=$(ifconfig $INTERNAL | grep "inet" | awk -F ' ' '{print $2}' |grep -v f |awk -F . '{print $1"."$2"."$3"."254}')"
-echo ""
-echo "*********************************************************"
-echo "FINDING NETWORK"
-echo "*********************************************************"
-echo 'INTERNALNETWORK='$(ifconfig "$INTERNAL" | grep "inet" | awk -F ' ' '{print $2}' |grep -v f |awk -F . '{print $1"."$2"."0"."0}')'' >> /root/.bashrc
-echo ""
-echo "*********************************************************"
-echo "FINDING SAT INTERFACE"
-echo "*********************************************************"
-echo 'SAT_INTERFACE='$(ip -o link | head -n 2 | tail -n 1 | awk '{print $2;}' | sed s/:$//)'' >> /root/.bashrc
-echo ""
-echo "*********************************************************"
-echo "FINDING SAT IP"
-echo ""
-echo "*********************************************************"
-echo 'SAT_IP='$(ifconfig "$INTERNAL" | grep "inet" | awk -F ' ' '{print $2}' |grep -v f |awk -F . '{print $1"."$2"."$3"."$4}')'' >> /root/.bashrc
-echo ""
-echo "*********************************************************"
-echo "SETTING RELM"
-echo "*********************************************************"
-echo 'REALM='$(hostname -d)'' >> /root/.bashrc
-echo ""
-echo "*********************************************************"
-echo "SETTING DNS"
-echo "*********************************************************"
-echo 'DNS='$(ip route list type unicast dev $(ip -o link | head -n 2 | tail -n 1 | awk '{print $2;}' | sed s/:$//) |awk -F " " '{print $7}')'' >> /root/.bashrc
-echo 'DNS_REV='$(ifconfig $INTERNAL | grep "inet" | awk -F ' ' '{print $2}' |grep -v f |awk -F . '{print $3"."$2"."$1".""in-addr.arpa"}')'' >> /root/.bashrc
-echo ""
-echo "*********************************************************"
-echo "DNS PTR RECORD"
-echo "*********************************************************"
-'PTR='$(ifconfig "$INTERNAL" | grep "inet" | awk -F ' ' '{print $2}' |grep -v f |awk -F . '{print $4}')''  >> /root/.bashrc
-echo ""
-echo "*********************************************************"
-echo "SETTING SUBNET VARS"
-echo "*********************************************************"
-echo 'SUBNET='$(ifconfig $INTERNAL | grep "inet" | awk -F ' ' '{print $2}' |grep -v f |awk -F . '{print $1"."$2"."0"."0}')'' >> /root/.bashrc
-echo 'SUBNET_MASK='$(ifconfig $INTERNAL |grep netmask |awk -F " " {'print $4'})'' >> /root/.bashrc
-echo ""
-echo "*********************************************************"
-echo "SETTING BGIN AND END IPAM RANGE"
-echo "*********************************************************"
-echo 'SETTING BEGIN AND END IPAM RANGE'
-echo 'SUBNET_IPAM_BEGIN='$DHCPSTART'' >> /root/.bashrc
-echo 'SUBNET_IPAM_END='$DHCPEND'' >> /root/.bashrc
-echo ""
-echo "*********************************************************"
-echo "DHCP"
-echo "*********************************************************"
-echo 'DHCP_RANGE=''"'$DHCPSTART' '$DHCPEND'"''' >> /root/.bashrc
-echo 'DHCP_GW='$(ip route list type unicast dev $(ip -o link | head -n 2 | tail -n 1 | awk '{print $2;}' | sed s/:$//) |awk -F " " '{print $7}')'' >> /root/.bashrc
-echo 'DHCP_DNS='$(ifconfig $INTERNAL | grep "inet" | awk -F ' ' '{print $2}' |grep -v f |awk -F . '{print $1"."$2"."$3"."$4}')'' >> /root/.bashrc
-echo ""
-}
 
-YMESSAGE="Adding to /root/.bashrc vars"
-NMESSAGE="Skipping"
-FMESSAGE="PLEASE ENTER Y or N"
-COUNTDOWN=10
-DEFAULTVALUE=n
+
 #-------------------------------
-function IPA {
-#-------------------------------
-echo ""
-echo "*********************************************************"
-echo "IPA SERVER"
-echo "*********************************************************"
-read -n1 -p "Do you have an IPA server? Y/N " INPUT
-INPUT=${INPUT:-$DEFAULTVALUE}
-if  [ "$INPUT" = "y" -o "$INPUT" = "Y" ] ;then
-echo -e "\n$YMESSAGE\n"
-yum install -y ipa-client ipa-admintools
-echo 'What is the FQDN of the IPA Server?'
-read  FQDNIPA
-echo 'IPA_SERVER='$FQDNIPA'' >> /root/.bashrc
-echo 'What is the location of the Capsule?'
-echo 'What is the ip address of your IPA host?'
-read  IPAIP
-echo 'IPA_IP='$IPAIP'' >> /root/.bashrc
-source /root/.bashrc
-echo '$IPA_IP $FQDNIPA' >> /etc/hosts
-#COMMANDEXECUTION
-elif [ "$INPUT" = "n" -o "$INPUT" = "N" ] ;then
-echo -e "\n$NMESSAGE\n"
-#COMMANDEXECUTION
-else
-echo -e "\n$FMESSAGE\n"
-REQUEST
-fi
-}
-#-------------------------------
-function CAPSULE {
-#-------------------------------
-echo ""
-echo "*********************************************************"
-echo "CAPSULE"
-echo "*********************************************************"
-read -n1 -p "Would you like to install a secondary capsule ? Y/N " INPUT
-INPUT=${INPUT:-$DEFAULTVALUE}
-if  [ "$INPUT" = "y" -o "$INPUT" = "Y" ] ;then
-echo -e "\n$YMESSAGE\n"
-echo 'PREPARE_CAPSULE=true' >> /root/.bashrc
-echo 'What will the FQDN of the Capsule be?'
-read CAPNAME
-echo 'CAPSULE_NAME='$CAPNAME'' >> /root/.bashrc
-echo 'What is the location of the Capsule?'
-read CAPLOC
-echo 'CAPSULE_LOC='$CAPLOC'' >> /root/.bashrc
-#COMMANDEXECUTION
-elif  [ "$INPUT" = "n" -o "$INPUT" = "N" ] ;then
-echo -e "\n$NMESSAGE\n"
-#COMMANDEXECUTION
-else
-echo -e "\n$FMESSAGE\n"
-REQUEST
-fi
-}
-#-------------------------------
-function SATLIBVIRT {
-#-------------------------------
-echo ""
-echo "*********************************************************"
-echo "LIBVIRT COMPUTE RESOURCE"
-echo "*********************************************************"
-read -n1 -p "Would you like to set up LIBVIRT as a compute resourse ? Y/N " INPUT
-INPUT=${INPUT:-$DEFAULTVALUE}
-if  [ "$INPUT" = "y" -o "$INPUT" = "Y" ] ;then
-echo -e "\n$YMESSAGE\n"
-echo 'CONFIGURE_LIBVIRT_RESOURCE=true' >> /root/.bashrc
-echo 'What is the fqdn of your libvirt host?'
-read  LIBVIRTFQDN
-echo 'COMPUTE_RES_FQDN='$LIBVIRTFQDN'' >> /root/.bashrc
-echo 'What is the ip address of your libvirt host?'
-read  LIBVIRTIP
-echo 'COMPUTE_RES_IP='$LIBVIRTIP'' >> /root/.bashrc
-echo 'What would you like to name your libvirt satellite resource? Example KVM'
-read  KVM
-echo 'COMPUTE_RES_NAME='$KVM'' >> /root/.bashrc
-source /root/.bashrc
-echo ''$COMPUTE_RES_IP' '$COMPUTE_RES_FQDN'' >> /etc/hosts
-#COMMANDEXECUTION
-elif [ "$INPUT" = "n" -o "$INPUT" = "N" ] ;then
-echo -e "\n$NMESSAGE\n"
-echo 'CONFIGURE_LIBVIRT_RESOURCE=false' >> /root/.bashrc
-#COMMANDEXECUTION
-else
-echo -e "\n$FMESSAGE\n"
-REQUEST
-fi
-}
-#-------------------------------
-function SATRHV {
-#-------------------------------
-echo ""
-echo "*********************************************************"
-echo "RHV COMPUTE RESOURCE"
-echo "*********************************************************"
-read -n1 -p "Would you like to set up RHV as a compute resourse ? Y/N " INPUT
-INPUT=${INPUT:-$DEFAULTVALUE}
-if  [ "$INPUT" = "y" -o "$INPUT" = "Y" ] ;then
-echo -e "\n$YMESSAGE\n"
-echo 'CONFIGURE_RHEV_RESOURCE=true' >> /root/.bashrc
-echo 'What is the fqdn of your RHV host?'
-read  RHVQDN
-echo 'COMPUTE_RES_FQDN=$RHVFQDN' >> /root/.bashrc
-echo 'What is the ip address of your RHV host?'
-read  RHVIP
-echo 'COMPUTE_RES_IP=$RHVIP' >> /root/.bashrc
-echo 'What would you like to name your RHV satellite resource? Example RHV'
-read  RHV
-echo 'COMPUTE_RES_NAME=$RHV' >> /root/.bashrc
-echo 'RHV_VERSION_4=true' >> /root/.bashrc
-echo 'RHV_RES_USER=admin@internal' >> /root/.bashrc
-echo 'RHV_RES_PASSWD='$ADMIN_PASSWORD'' >> /root/.bashrc
-echo 'RHV_RES_UUID=Default' >> /root/.bashrc
-source /root/.bashrc
-echo '$COMPUTE_RES_IP " " $COMPUTE_RES_FQDN' >> /etc/hosts
-#COMMANDEXECUTION
-elif [ "$INPUT" = "n" -o "$INPUT" = "N" ] ;then
-echo -e "\n$NMESSAGE\n"
-echo 'CONFIGURE_RHEV_RESOURCE=false' >> /root/.bashrc
-#COMMANDEXECUTION
-else
-echo -e "\n$FMESSAGE\n"
-REQUEST
-fi
-}
-# This script alternatively allows to use a RHV virtualization backend using the following parameters
-#-------------------------------
-function RHVORLIBVIRT {
-#-------------------------------
-echo ""
-echo "*********************************************************"
-echo "RHV or LIBVIRT=TRUE"
-echo "*********************************************************"
-source /root/.bashrc
-if [ $CONFIGURE_RHEV_RESOURCE = 'true' -a $CONFIGURE_LIBVIRT_RESOURCE = 'true' ]; then
-echo "Only one of CONFIGURE_RHEV_RESOURCE and CONFIGURE_LIBVIRT_RESOURCE may be true."
-exit 1
-fi
-# FIRST_SATELLITE matters only if you want to have more than one Sat work with the same IPAREALM infrastructure.
-# If this is the case, you need to make sure to set this to false for all subsequent Satellite instances.
-echo 'FIRST_SATELLITE=false ' >> /root/.bashrc
-echo ' '
-echo 'In another terminal please check/correct any variables in /root/.bashrc
-that are not needed or are wrong'
-read -p "Press [Enter] to continue"
-}
-#-------------------------------
-function DEFAULTMSG {
-#-------------------------------
-echo ""
-echo "*********************************************************"
-echo "BY DEFAULT IF YOU JUST LET THIS SCRIPT RUN YOU WILL 
-ONLY SYNC THE CORE RHEL 7 (KICKSTART, 7SERVER, OPTIONAL, EXTRAS,
- SAT 6.4 TOOLS, SUPPLAMENTRY, AND RH COMMON ) THE PROGRESS 
- TO THIS STEP CAN BE TRACKED AT $(hostname)/katello/sync_management:"
-echo "*********************************************************"
-echo ""
-}
-#-------------------------------
-function SYNCREL5 {
-#-------------------------------
-echo ""
-echo "*********************************************************"
-echo "SYNC RHEL 5?"
-echo "*********************************************************"
-read -n1 -p "Would you like to enable RHEL 5 content  ? Y/N" INPUT
-INPUT=${INPUT:-$RHEL5DEFAULTVALUE}
-if  [ "$INPUT" = "y" -o "$INPUT" = "Y" ] ;then
-echo -e "\n$YMESSAGE\n"
-echo 'RHEL5DEFAULTVALUE=y' >> /root/.bashrc
-#COMMANDEXECUTION
-elif  [ "$INPUT" = "n" -o "$INPUT" = "N" ] ;then
-echo -e "\n$NMESSAGE\n"
-echo 'RHEL5DEFAULTVALUE=n' >> /root/.bashrc
-#COMMANDEXECUTION
-else
-echo -e "\n$FMESSAGE\n"
-REQUEST
-fi
-}
-#-------------------------------
-function SYNCREL6 {
-#-------------------------------
-echo ""
-echo "*********************************************************"
-echo "SYNC RHEL 6?"
-echo "*********************************************************"
-read -n1 -p "Would you like to enable RHEL 6 content  ? Y/N" INPUT
-INPUT=${INPUT:-$RHEL6DEFAULTVALUE}
-if  [ "$INPUT" = "y" -o "$INPUT" = "Y" ] ;then
-echo -e "\n$YMESSAGE\n"
-echo 'RHEL6DEFAULTVALUE=y' >> /root/.bashrc
-#COMMANDEXECUTION
-elif  [ "$INPUT" = "n" -o "$INPUT" = "N" ] ;then
-echo -e "\n$NMESSAGE\n"
-echo 'RHEL6DEFAULTVALUE=n' >> /root/.bashrc
-#COMMANDEXECUTION
-else
-echo -e "\n$FMESSAGE\n"
-REQUEST
-fi
-}
+
+
 #---END OF VARIABLES 1 SCRIPT---
 
 #---START OF SAT 6.X INSTALL SCRIPT---
@@ -615,7 +42,7 @@ subscription-manager repos --enable=rhel-server-rhscl-7-rpms || exit 1
 subscription-manager repos --enable=rhel-7-server-optional-rpms || exit 1
 subscription-manager repos --enable=rhel-7-server-satellite-6.4-rpms || exit 1
 subscription-manager repos --enable=rhel-7-server-satellite-maintenance-6-rpms || exit 1
-yum clean all 
+yum clean all
 rm -rf /var/cache/yum
 }
 #------------------------------
@@ -702,7 +129,7 @@ echo "ADDING KATELLO-CVMANAGER TO /HOME/ADMIN/GIT "
 echo "*********************************************************"
 cd /home/admin/git
 git clone https://github.com/RedHatSatellite/katello-cvmanager.git
-cd 
+cd
 mkdir -p /root/.hammer
 echo " "
 
@@ -724,7 +151,7 @@ echo " "
 echo "*********************************************************"
 echo "CHECKING FQDN"
 echo "*********************************************************"
-hostname -f 
+hostname -f
 if [ $? -eq 0 ]; then
     echo 'The FQDN is as expected $(hostname)'
 else
@@ -775,7 +202,7 @@ subscription-manager repos --enable=rhel-server-rhscl-7-rpms || exit 1
 subscription-manager repos --enable=rhel-7-server-optional-rpms || exit 1
 subscription-manager repos --enable=rhel-7-server-satellite-6.4-rpms || exit 1
 subscription-manager repos --enable=rhel-7-server-satellite-maintenance-6-rpms || exit 1
-yum clean all 
+yum clean all
 rm -rf /var/cache/yum
 
 echo "Installing Satellite 6.4"
@@ -850,7 +277,7 @@ echo "*********************************************************"
 yum groupinstall -y 'Red Hat Satellite'
 yum -q list installed puppet-foreman_scap_client &>/dev/null && echo "puppet-foreman_scap_client is installed" || yum install -y puppet-foreman_scap_client* --skip-broken
 yum -q list installed foreman-discovery-image &>/dev/null && echo "foreman-discovery-image is installed" || yum install -y foreman-discovery-image* --skip-broken
-yum -q list installed rubygem-smart_proxy_discovery &>/dev/null && echo "rubygem-smart_proxy_discovery is installed" || yum install -y rubygem-smart_proxy_discovery* --skip-broken 
+yum -q list installed rubygem-smart_proxy_discovery &>/dev/null && echo "rubygem-smart_proxy_discovery is installed" || yum install -y rubygem-smart_proxy_discovery* --skip-broken
 
 source /root/.bashrc
 satellite-installer --scenario satellite -v \
@@ -972,7 +399,7 @@ hammer subscription refresh-manifest --organization $ORG
 echo "*********************************************************"
 echo 'REFRESHING THE CAPSULE CONTENT'
 echo "*********************************************************"
-for i in $(hammer capsule list |awk -F '|' '{print $1}' |grep -v ID|grep -v -) ; do hammer capsule refresh-features --id=$i ; done 
+for i in $(hammer capsule list |awk -F '|' '{print $1}' |grep -v ID|grep -v -) ; do hammer capsule refresh-features --id=$i ; done
 sleep 5
 echo "*********************************************************"
 echo 'SETTING SATELLITE EVN SETTINGS'
@@ -995,7 +422,7 @@ echo "*********************************************************"
 echo "STOP THE LOG SPAMMING OF /VAR/LOG/MESSAGES WITH SLICE"
 echo "*********************************************************"
 echo 'if $programname == "systemd" and ($msg contains "Starting Session" or $msg contains "Started Session" or $msg contains "Created slice" or $msg contains "Starting user-" or $msg contains "Starting User Slice of" or $msg contains "Removed session" or $msg contains "Removed slice User Slice of" or $msg contains "Stopping User Slice of") then stop' > /etc/rsyslog.d/ignore-systemd-session-slice.conf
-systemctl restart rsyslog 
+systemctl restart rsyslog
 }
 #NOTE: Jenkins, CentOS-7  Puppet Forge, Icinga, and Maven are examples of setting up a custom repository
 #---START OF REPO CONFIGURE AND SYNC SCRIPT---
@@ -1072,16 +499,16 @@ echo "*********************************************************"
 echo "Configuring Repositories"
 echo "*********************************************************"
 echo "*********************************************************"
-echo "BY DEFAULT IF YOU JUST LET THIS SCRIPT RUN YOU WILL 
+echo "BY DEFAULT IF YOU JUST LET THIS SCRIPT RUN YOU WILL
 ONLY SYNC THE  CORE RHEL 7 (KICKSTART, 7SERVER, OPTIONAL, EXTRAS,
- SAT 6.4 TOOLS, SUPPLAMENTRY, AND RH COMMON ) THE PROGRESS 
+ SAT 6.4 TOOLS, SUPPLAMENTRY, AND RH COMMON ) THE PROGRESS
  TO THIS STEP CAN BE TRACKED AT $(hostname)/katello/sync_management :"
 echo "*********************************************************"
 if ! xset q &>/dev/null; then
     echo "No X server at \$DISPLAY [$DISPLAY]" >&2
     echo 'In a system browser please goto the URL to view progress https://$(hostname)/katello/sync_management'
     sleep 10
-else 
+else
     firefox https://$(hostname)/katello/sync_management &
 fi
 }
@@ -1213,7 +640,7 @@ echo -e "\n$YMESSAGE\n"
 echo "*********************************************************"
 echo "Red Hat Enterprise Linux 7 Server (Kickstart):"
 echo "*********************************************************"
-hammer repository-set enable --organization "$ORG" --product 'Red Hat Enterprise Linux Server' --basearch='x86_64' --releasever='7.6' --name 'Red Hat Enterprise Linux 7 Server (Kickstart)' 
+hammer repository-set enable --organization "$ORG" --product 'Red Hat Enterprise Linux Server' --basearch='x86_64' --releasever='7.6' --name 'Red Hat Enterprise Linux 7 Server (Kickstart)'
 hammer repository update --organization "$ORG" --product 'Red Hat Enterprise Linux Server' --name 'Red Hat Enterprise Linux 7 Server Kickstart x86_64 7.6' --download-policy immediate
 time hammer repository synchronize --organization "$ORG" --product 'Red Hat Enterprise Linux Server' --name 'Red Hat Enterprise Linux 7 Server Kickstart x86_64 7.6' 2>/dev/null
 sleep 10
@@ -1814,7 +1241,7 @@ if ! xset q &>/dev/null; then
     echo "No X server at \$DISPLAY [$DISPLAY]" >&2
     echo 'In a system browser please goto the URL to view progress https://$(hostname)/katello/sync_management'
     sleep 10
-else 
+else
     firefox https://$(hostname)/katello/sync_management &
 fi
 echo " "
@@ -1928,7 +1355,7 @@ echo "Create a content view for CentOS-7:"
 echo "***********************************************"
 #hammer content-view create --name='RHEL7-server-x86_64' --organization $ORG
 #sleep 20
-#for i in $(hammer --csv repository list --organization $ORG | awk -F, {'print $1'} | grep -vi '^ID'); do hammer content-view add-repository --name RHEL7-Base --organization $ORG --repository-id=${i}; done  
+#for i in $(hammer --csv repository list --organization $ORG | awk -F, {'print $1'} | grep -vi '^ID'); do hammer content-view add-repository --name RHEL7-Base --organization $ORG --repository-id=${i}; done
 hammer content-view create --organization $ORG --name 'CentOS 7' --label 'CentOS7' --description 'CentOS 7'
 hammer content-view add-repository --organization $ORG --name 'CentOS 7' --product 'CentOS-7' --repository 'CentOS-7 (Kickstart)'
 hammer content-view add-repository --organization $ORG --name 'CentOS 7' --product 'CentOS-7' --repository 'CentOS-7 Gluster 5'
@@ -2187,7 +1614,7 @@ echo "********************************"
 echo "
   There may be errors in the next step (Could not add subscription to activation key) Please ignore these as
   long as your primary keys for your enabled subscriptions have been added"
-  
+
 echo " "
 echo "********************************"
 echo " "
@@ -2302,7 +1729,7 @@ hammer template add-operatingsystem --operatingsystem-id 1 --id 1
 #-------------------------------
 function SATDONE {
 #-------------------------------
-for i in $(hammer capsule list |awk -F '|' '{print $1}' |grep -v ID|grep -v -) ; do hammer capsule refresh-features --id=$i ; done 
+for i in $(hammer capsule list |awk -F '|' '{print $1}' |grep -v ID|grep -v -) ; do hammer capsule refresh-features --id=$i ; done
 hammer template build-pxe-default
 foreman-rake foreman_tasks:cleanup TASK_SEARCH='label = Actions::Katello::Repository::Sync' STATES='paused,pending,stopped' VERBOSE=true
 foreman-rake katello:delete_orphaned_content --trace
@@ -2310,7 +1737,7 @@ foreman-rake katello:reindex --trace
 echo 'YOU HAVE NOW COMPLETED INSTALLING SATELLITE!'
 clear
 }
-#NOTE You can remove or dissasociate templates Remove is perm (Destricutve) dissasociate you can re associate if you need 
+#NOTE You can remove or dissasociate templates Remove is perm (Destricutve) dissasociate you can re associate if you need
 
 #-------------------------------
 function REMOVEUNSUPPORTED {
@@ -2414,14 +1841,14 @@ subscription-manager repos --enable=rhel-7-server-rpms
 subscription-manager repos --enable=rhel-server-rhscl-7-rpms
 subscription-manager repos --enable=rhel-7-server-satellite-6.4-rpms
 subscription-manager repos --enable=rhel-7-server-satellite-maintenance-6-rpms
-yum-config-manager --setopt=\*.skip_if_unavailable=1 --save \* 
+yum-config-manager --setopt=\*.skip_if_unavailable=1 --save \*
 foreman-rake foreman_tasks:cleanup TASK_SEARCH='label = Actions::Katello::Repository::Sync' STATES='paused,pending,stopped' VERBOSE=true
 foreman-rake katello:delete_orphaned_content --trace
 foreman-rake katello:reindex --trace
 katello-service stop
 katello-selinux-disable
 setenforce 0
-service firewalld stop 
+service firewalld stop
 yum upgrade -y --skip-broken --setopt=protected_multilib=false ; yum update -y --skip-broken --setopt=protected_multilib=false
 yum -q list installed puppetserver &>/dev/null && echo "puppetserver is installed" || time yum install puppetserver -y --skip-broken --setopt=protected_multilib=false
 yum -q list installed puppet-agent-oauth &>/dev/null && echo "puppet-agent-oauth is installed" || time yum install puppet-agent-oauth -y --skip-broken --setopt=protected_multilib=false
@@ -2429,7 +1856,7 @@ yum -q list installed puppet-agent &>/dev/null && echo "puppet-agent is installe
 satellite-installer -v --scenario satellite --upgrade
 foreman-rake apipie:cache:index --trace
 hammer template build-pxe-default
-for i in $(hammer capsule list |awk -F '|' '{print $1}' |grep -v ID|grep -v -) ; do hammer capsule refresh-features --id=$i ; done 
+for i in $(hammer capsule list |awk -F '|' '{print $1}' |grep -v ID|grep -v -) ; do hammer capsule refresh-features --id=$i ; done
 }
 #-------------------------------
 function INSIGHTS {
@@ -2455,7 +1882,7 @@ mv -f /root/.bashrc.bak /root/.bashrc
 #-------------------------------
 function ANSIBLETOWER {
 echo -ne "\e[8;33;120t"
-reset 
+reset
 
 HNAME=$(hostname)
 echo " "
@@ -2468,7 +1895,7 @@ ANSIBLE-TOWER BASE REQUIREMENTS
 1. Ansible-Tower will require a license.
 Please register and download your lincense at http://www.ansible.com/tower-trial
 
-2. Hardware requirement depends, however whether 
+2. Hardware requirement depends, however whether
   it is a KVM or physical-Tower will require atleast 1 node with:
 
 Min Storage 30 GB
@@ -2603,8 +2030,8 @@ sleep 10
 #----------------------
 function dInptBx {
 #----------------------
-#Requires 2 mandatory options and 3rd is preset variable 
-$DIALOG --title "$1" --inputbox "$2" 20 80 "$3" 
+#Requires 2 mandatory options and 3rd is preset variable
+$DIALOG --title "$1" --inputbox "$2" 20 80 "$3"
 }
 
 #----------------------------------End-Functions-------------------------------
@@ -2622,7 +2049,7 @@ $DIALOG --infobox "
 **************************
 
 `hostname`" 20 80 $TV
-[[ -z $DISPLAY ]] && sleep 2 
+[[ -z $DISPLAY ]] && sleep 2
 
 #---------------------------------Menu----------------------------------------
 HNAME=$(hostname)
@@ -2700,7 +2127,7 @@ HOSTGROUPS
 MODPXELINUXDEF
 ADD_OS_TO_TEMPLATE
 SATDONE
-sleep 10 
+sleep 10
 exit
 ;;
 2) dMsgBx "UPGRADE/UPDATE THE SATELLITE 6.X" \

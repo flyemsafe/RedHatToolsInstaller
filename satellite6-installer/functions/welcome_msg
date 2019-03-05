@@ -1,0 +1,110 @@
+function WELCOME_MSG {
+        echo -ne "\e[8;40;170t"
+    
+    # Hammer referance to assist in modifing the script can be found at 
+    # https://www.gitbook.com/book/abradshaw/    getting-started-with-satellite-6-command-line/details
+    
+    
+    reset
+    
+    #--------------------------required packages for script to     run----------------------------
+    
+    echo " "
+    echo " "
+    echo " "
+    echo " "
+    echo " "
+    echo " "
+    echo " "
+    echo " "
+    echo " "
+    echo "
+    
+                               P.O.C Satellite 6.X RHEL 7.X KVM or RHEL 7 Physical Host 
+                                  THIS SCRIPT CONTAINS NO CONFIDENTIAL INFORMATION
+    
+                      This script is designed to set up a basic standalone Satellite 6.X     system
+    
+                 Disclaimer: This script was written for education, evaluation, and/or     testing purposes. 
+        This helper script is Licensed under GPL and there is no implied warranty and is     not officially supported by anyone.
+                                     
+             ...SHOULD NOT BE USED ON A CURRENTlY OPERATING PRODUCTION SYSTEM - USE AT     YOUR OWN RISK...
+             Satellite 6.4 requirements can be found at 
+    
+    
+       However the if you have an issue with the products installed and have a valid     License please contact Red Hat at:
+    
+       RED HAT Inc..
+       1-888-REDHAT-1 or 1-919-754-3700, then select the Menu Prompt for Customer Service
+       Spanish: 1-888-REDHAT-1 Option 5 or 1-919-754-3700 Option 5
+       Fax: 919-754-3701 (General Corporate Fax)
+       Email address: customerservice@redhat.com "
+    
+    echo " "
+    echo " "
+    echo " "
+    echo " "
+    echo " "
+    echo " "
+    echo " "
+    echo " "
+    echo " "
+    echo " "
+    echo " "
+    echo " "
+    echo " "
+    echo " "
+    echo " "
+    read -p "Press [Enter] to continue"
+    clear
+    echo " "
+    echo " "
+    echo " "
+    echo " "
+    echo " "
+    echo " "
+    echo " "
+    echo " "
+    echo " "
+    echo "
+    
+    
+    
+                              JUST A REVIEW
+                              This is a Proof Of Concept script for the purposes of     evaluation
+                              and/or training.
+                              Requirements for this script to work:
+                               * RHEL 7.6 Base install or Server with UI
+                               * A Baremetal or VM (Snap shot this system in case you     want 
+                                 to change something and run again)
+                               * System
+                                  4 PROC
+                                  22 GB RAM
+                                  250 GB Storage
+                               * Basic Partitioning on LVM
+                                  /  (root) 
+                                  /boot
+                                  swap 
+                               * An external network connection 
+                               * A subscription to Satellite 
+                                  In another window you will need to obtain your account     Satellite pool ID from: 
+                                  ' subscription-manager list --available ' save that     incase you are prompted for the it
+                               * Manifest created with some entitlements and downloaded     from:
+                                https://access.redhat.com/management/    subscription_allocations/
+                               * The manifest placed in a directory /home/admin/Downloads
+                               * Lastly this script 
+                                   "
+    
+    
+    echo " "
+    echo " "
+    echo " "
+    echo " "
+    echo " "
+    echo " "
+    echo " "
+    echo " "
+    read -p "Press [Enter] to continue"
+    clear
+}
+    

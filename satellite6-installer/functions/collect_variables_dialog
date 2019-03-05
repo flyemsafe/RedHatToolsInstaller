@@ -1,0 +1,331 @@
+function COLLECT_VARIABLES_DIALOG {
+#-------------------------------
+echo ""
+echo "*********************************************************"
+echo "COLLECT VARIABLES FOR SAT 6.X"
+echo "*********************************************************"
+cp -p /root/.bashrc /root/.bashrc.bak
+export INTERNAL=$(ip -o link | head -n 2 | tail -n 1 | awk '{print $2}' | sed s/:// )
+export EXTERNAL=$(ip route show | sed -e 's/^default via [0-9.]* dev \(\w\+\).*/\1/' | head -1)
+export INTERNALIP=$(ifconfig "$INTERNAL" | grep "inet" | awk -F ' ' '{print $2}' |grep -v f |awk -F . '{print $1"."$2"."$3"."$4}')
+export INTERNALSUBMASK=$(ifconfig "$INTERNAL" |grep netmask |awk -F " " {'print $4'})
+export INTERNALGATEWAY=$(ip route list type unicast dev $(ip -o link | head -n 2 | tail -n 1 | awk '{print $2;}' | sed s/:$//) |awk -F " " '{print $7}')
+echo "INTERNALIP=$INTERNALIP" >> /root/.bashrc
+echo ""
+echo "*********************************************************"
+echo "ORGANIZATION"
+echo "*********************************************************"
+echo 'What is the name of your Organization?'
+read ORG
+echo 'ORG='$ORG'' >> /root/.bashrc
+echo ""
+echo "*********************************************************"
+echo "LOCATION OF YOUR SATELLITE"
+echo "*********************************************************"
+echo 'LOCATION'
+echo 'What is the location of your Satellite server. Example DENVER'
+read LOC
+echo 'LOC='$LOC'' >> /root/.bashrc
+echo ""
+echo "*********************************************************"
+echo "SETTING DOMAIN"
+echo "*********************************************************"
+echo 'what is your domain name Example:'$(hostname -d)''
+read DOM
+echo 'DOM='$DOM'' >> /root/.bashrc
+echo ""
+echo "*********************************************************"
+echo "ADMIN PASSWORD - WRITE OR REMEMBER YOU WILL BE PROMPTED FOR
+USER: admin AND THIS PASSWORD WHEN WE IMPORT THE MANIFEST"
+echo "*********************************************************"
+sleep 5
+echo 'ADMIN=admin'  >> /root/.bashrc
+echo 'What will the password be for your admin user?'
+read  ADMIN_PASSWORD
+echo 'ADMIN_PASSWORD='$ADMIN_PASSWORD'' >> /root/.bashrc
+echo ""
+echo "*********************************************************"
+echo "NAME OF FIRST SUBNET"
+echo "*********************************************************"
+echo 'What would you like to call your first subnet for systems you are regestering to satellite?'
+read  SUBNET
+echo 'SUBNET_NAME='$SUBNET'' >> /root/.bashrc
+echo ""
+echo "*********************************************************"
+echo "PROVISIONED NODE PREFIX"
+echo "*********************************************************"
+# The host prefix is used to distinguish the demo hosts created at the end of this script.
+echo 'What would you like the prefix to be for systems you are provisioning with Satellite Example poc- kvm- vm-? enter to skip'
+read  PREFIX
+echo 'HOST_PREFIX='$PREFIX'' >> /root/.bashrc
+echo ""
+echo "*********************************************************"
+echo "NODE PASSWORD"
+echo "*********************************************************"
+echo 'PROVISIONED HOST PASSWORD'
+echo 'Please enter the default password you would like to use for root for your newly provisioned nodes'
+read PASSWORD
+for i in $(echo "$PASSWORD" | openssl passwd -apr1 -stdin); do echo NODEPASS=$i >> /root/.bashrc ; done
+
+export "DHCPSTART=$(ifconfig $INTERNAL | grep "inet" | awk -F ' ' '{print $2}' |grep -v f |awk -F . '{print $1"."$2"."$3"."2}')"
+export "DHCPEND=$(ifconfig $INTERNAL | grep "inet" | awk -F ' ' '{print $2}' |grep -v f |awk -F . '{print $1"."$2"."$3"."254}')"
+echo ""
+echo "*********************************************************"
+echo "FINDING NETWORK"
+echo "*********************************************************"
+echo 'INTERNALNETWORK='$(ifconfig "$INTERNAL" | grep "inet" | awk -F ' ' '{print $2}' |grep -v f |awk -F . '{print $1"."$2"."0"."0}')'' >> /root/.bashrc
+echo ""
+echo "*********************************************************"
+echo "FINDING SAT INTERFACE"
+echo "*********************************************************"
+echo 'SAT_INTERFACE='$(ip -o link | head -n 2 | tail -n 1 | awk '{print $2;}' | sed s/:$//)'' >> /root/.bashrc
+echo ""
+echo "*********************************************************"
+echo "FINDING SAT IP"
+echo ""
+echo "*********************************************************"
+echo 'SAT_IP='$(ifconfig "$INTERNAL" | grep "inet" | awk -F ' ' '{print $2}' |grep -v f |awk -F . '{print $1"."$2"."$3"."$4}')'' >> /root/.bashrc
+echo ""
+echo "*********************************************************"
+echo "SETTING RELM"
+echo "*********************************************************"
+echo 'REALM='$(hostname -d)'' >> /root/.bashrc
+echo ""
+echo "*********************************************************"
+echo "SETTING DNS"
+echo "*********************************************************"
+echo 'DNS='$(ip route list type unicast dev $(ip -o link | head -n 2 | tail -n 1 | awk '{print $2;}' | sed s/:$//) |awk -F " " '{print $7}')'' >> /root/.bashrc
+echo 'DNS_REV='$(ifconfig $INTERNAL | grep "inet" | awk -F ' ' '{print $2}' |grep -v f |awk -F . '{print $3"."$2"."$1".""in-addr.arpa"}')'' >> /root/.bashrc
+echo ""
+echo "*********************************************************"
+echo "DNS PTR RECORD"
+echo "*********************************************************"
+'PTR='$(ifconfig "$INTERNAL" | grep "inet" | awk -F ' ' '{print $2}' |grep -v f |awk -F . '{print $4}')''  >> /root/.bashrc
+echo ""
+echo "*********************************************************"
+echo "SETTING SUBNET VARS"
+echo "*********************************************************"
+echo 'SUBNET='$(ifconfig $INTERNAL | grep "inet" | awk -F ' ' '{print $2}' |grep -v f |awk -F . '{print $1"."$2"."0"."0}')'' >> /root/.bashrc
+echo 'SUBNET_MASK='$(ifconfig $INTERNAL |grep netmask |awk -F " " {'print $4'})'' >> /root/.bashrc
+echo ""
+echo "*********************************************************"
+echo "SETTING BGIN AND END IPAM RANGE"
+echo "*********************************************************"
+echo 'SETTING BEGIN AND END IPAM RANGE'
+echo 'SUBNET_IPAM_BEGIN='$DHCPSTART'' >> /root/.bashrc
+echo 'SUBNET_IPAM_END='$DHCPEND'' >> /root/.bashrc
+echo ""
+echo "*********************************************************"
+echo "DHCP"
+echo "*********************************************************"
+echo 'DHCP_RANGE=''"'$DHCPSTART' '$DHCPEND'"''' >> /root/.bashrc
+echo 'DHCP_GW='$(ip route list type unicast dev $(ip -o link | head -n 2 | tail -n 1 | awk '{print $2;}' | sed s/:$//) |awk -F " " '{print $7}')'' >> /root/.bashrc
+echo 'DHCP_DNS='$(ifconfig $INTERNAL | grep "inet" | awk -F ' ' '{print $2}' |grep -v f |awk -F . '{print $1"."$2"."$3"."$4}')'' >> /root/.bashrc
+echo ""
+}
+
+#-------------------------------
+function IPA {
+#-------------------------------
+echo ""
+echo "*********************************************************"
+echo "IPA SERVER"
+echo "*********************************************************"
+read -n1 -p "Do you have an IPA server? Y/N " INPUT
+INPUT=${INPUT:-$DEFAULTVALUE}
+if  [ "$INPUT" = "y" -o "$INPUT" = "Y" ] ;then
+echo -e "\n$YMESSAGE\n"
+yum install -y ipa-client ipa-admintools
+echo 'What is the FQDN of the IPA Server?'
+read  FQDNIPA
+echo 'IPA_SERVER='$FQDNIPA'' >> /root/.bashrc
+echo 'What is the location of the Capsule?'
+echo 'What is the ip address of your IPA host?'
+read  IPAIP
+echo 'IPA_IP='$IPAIP'' >> /root/.bashrc
+source /root/.bashrc
+echo '$IPA_IP $FQDNIPA' >> /etc/hosts
+#COMMANDEXECUTION
+elif [ "$INPUT" = "n" -o "$INPUT" = "N" ] ;then
+echo -e "\n$NMESSAGE\n"
+#COMMANDEXECUTION
+else
+echo -e "\n$FMESSAGE\n"
+REQUEST
+fi
+}
+
+function CAPSULE {
+#-------------------------------
+echo ""
+echo "*********************************************************"
+echo "CAPSULE"
+echo "*********************************************************"
+read -n1 -p "Would you like to install a secondary capsule ? Y/N " INPUT
+INPUT=${INPUT:-$DEFAULTVALUE}
+if  [ "$INPUT" = "y" -o "$INPUT" = "Y" ] ;then
+echo -e "\n$YMESSAGE\n"
+echo 'PREPARE_CAPSULE=true' >> /root/.bashrc
+echo 'What will the FQDN of the Capsule be?'
+read CAPNAME
+echo 'CAPSULE_NAME='$CAPNAME'' >> /root/.bashrc
+echo 'What is the location of the Capsule?'
+read CAPLOC
+echo 'CAPSULE_LOC='$CAPLOC'' >> /root/.bashrc
+#COMMANDEXECUTION
+elif  [ "$INPUT" = "n" -o "$INPUT" = "N" ] ;then
+echo -e "\n$NMESSAGE\n"
+#COMMANDEXECUTION
+else
+echo -e "\n$FMESSAGE\n"
+REQUEST
+fi
+}
+#-------------------------------
+function SATLIBVIRT {
+#-------------------------------
+echo ""
+echo "*********************************************************"
+echo "LIBVIRT COMPUTE RESOURCE"
+echo "*********************************************************"
+read -n1 -p "Would you like to set up LIBVIRT as a compute resourse ? Y/N " INPUT
+INPUT=${INPUT:-$DEFAULTVALUE}
+if  [ "$INPUT" = "y" -o "$INPUT" = "Y" ] ;then
+echo -e "\n$YMESSAGE\n"
+echo 'CONFIGURE_LIBVIRT_RESOURCE=true' >> /root/.bashrc
+echo 'What is the fqdn of your libvirt host?'
+read  LIBVIRTFQDN
+echo 'COMPUTE_RES_FQDN='$LIBVIRTFQDN'' >> /root/.bashrc
+echo 'What is the ip address of your libvirt host?'
+read  LIBVIRTIP
+echo 'COMPUTE_RES_IP='$LIBVIRTIP'' >> /root/.bashrc
+echo 'What would you like to name your libvirt satellite resource? Example KVM'
+read  KVM
+echo 'COMPUTE_RES_NAME='$KVM'' >> /root/.bashrc
+source /root/.bashrc
+echo ''$COMPUTE_RES_IP' '$COMPUTE_RES_FQDN'' >> /etc/hosts
+#COMMANDEXECUTION
+elif [ "$INPUT" = "n" -o "$INPUT" = "N" ] ;then
+echo -e "\n$NMESSAGE\n"
+echo 'CONFIGURE_LIBVIRT_RESOURCE=false' >> /root/.bashrc
+#COMMANDEXECUTION
+else
+echo -e "\n$FMESSAGE\n"
+REQUEST
+fi
+}
+#-------------------------------
+function SATRHV {
+#-------------------------------
+echo ""
+echo "*********************************************************"
+echo "RHV COMPUTE RESOURCE"
+echo "*********************************************************"
+read -n1 -p "Would you like to set up RHV as a compute resourse ? Y/N " INPUT
+INPUT=${INPUT:-$DEFAULTVALUE}
+if  [ "$INPUT" = "y" -o "$INPUT" = "Y" ] ;then
+echo -e "\n$YMESSAGE\n"
+echo 'CONFIGURE_RHEV_RESOURCE=true' >> /root/.bashrc
+echo 'What is the fqdn of your RHV host?'
+read  RHVQDN
+echo 'COMPUTE_RES_FQDN=$RHVFQDN' >> /root/.bashrc
+echo 'What is the ip address of your RHV host?'
+read  RHVIP
+echo 'COMPUTE_RES_IP=$RHVIP' >> /root/.bashrc
+echo 'What would you like to name your RHV satellite resource? Example RHV'
+read  RHV
+echo 'COMPUTE_RES_NAME=$RHV' >> /root/.bashrc
+echo 'RHV_VERSION_4=true' >> /root/.bashrc
+echo 'RHV_RES_USER=admin@internal' >> /root/.bashrc
+echo 'RHV_RES_PASSWD='$ADMIN_PASSWORD'' >> /root/.bashrc
+echo 'RHV_RES_UUID=Default' >> /root/.bashrc
+source /root/.bashrc
+echo '$COMPUTE_RES_IP " " $COMPUTE_RES_FQDN' >> /etc/hosts
+#COMMANDEXECUTION
+elif [ "$INPUT" = "n" -o "$INPUT" = "N" ] ;then
+echo -e "\n$NMESSAGE\n"
+echo 'CONFIGURE_RHEV_RESOURCE=false' >> /root/.bashrc
+#COMMANDEXECUTION
+else
+echo -e "\n$FMESSAGE\n"
+REQUEST
+fi
+}
+# This script alternatively allows to use a RHV virtualization backend using the following parameters
+#-------------------------------
+function RHVORLIBVIRT {
+#-------------------------------
+echo ""
+echo "*********************************************************"
+echo "RHV or LIBVIRT=TRUE"
+echo "*********************************************************"
+source /root/.bashrc
+if [ $CONFIGURE_RHEV_RESOURCE = 'true' -a $CONFIGURE_LIBVIRT_RESOURCE = 'true' ]; then
+echo "Only one of CONFIGURE_RHEV_RESOURCE and CONFIGURE_LIBVIRT_RESOURCE may be true."
+exit 1
+fi
+# FIRST_SATELLITE matters only if you want to have more than one Sat work with the same IPAREALM infrastructure.
+# If this is the case, you need to make sure to set this to false for all subsequent Satellite instances.
+echo 'FIRST_SATELLITE=false ' >> /root/.bashrc
+echo ' '
+echo 'In another terminal please check/correct any variables in /root/.bashrc
+that are not needed or are wrong'
+read -p "Press [Enter] to continue"
+}
+
+#-------------------------------
+function DEFAULTMSG {
+#-------------------------------
+echo ""
+echo "*********************************************************"
+echo "BY DEFAULT IF YOU JUST LET THIS SCRIPT RUN YOU WILL
+ONLY SYNC THE CORE RHEL 7 (KICKSTART, 7SERVER, OPTIONAL, EXTRAS,
+ SAT 6.4 TOOLS, SUPPLAMENTRY, AND RH COMMON ) THE PROGRESS
+ TO THIS STEP CAN BE TRACKED AT $(hostname)/katello/sync_management:"
+echo "*********************************************************"
+echo ""
+}
+#-------------------------------
+function SYNCREL5 {
+#-------------------------------
+echo ""
+echo "*********************************************************"
+echo "SYNC RHEL 5?"
+echo "*********************************************************"
+read -n1 -p "Would you like to enable RHEL 5 content  ? Y/N" INPUT
+INPUT=${INPUT:-$RHEL5DEFAULTVALUE}
+if  [ "$INPUT" = "y" -o "$INPUT" = "Y" ] ;then
+echo -e "\n$YMESSAGE\n"
+echo 'RHEL5DEFAULTVALUE=y' >> /root/.bashrc
+#COMMANDEXECUTION
+elif  [ "$INPUT" = "n" -o "$INPUT" = "N" ] ;then
+echo -e "\n$NMESSAGE\n"
+echo 'RHEL5DEFAULTVALUE=n' >> /root/.bashrc
+#COMMANDEXECUTION
+else
+echo -e "\n$FMESSAGE\n"
+REQUEST
+fi
+}
+#-------------------------------
+function SYNCREL6 {
+#-------------------------------
+echo ""
+echo "*********************************************************"
+echo "SYNC RHEL 6?"
+echo "*********************************************************"
+read -n1 -p "Would you like to enable RHEL 6 content  ? Y/N" INPUT
+INPUT=${INPUT:-$RHEL6DEFAULTVALUE}
+if  [ "$INPUT" = "y" -o "$INPUT" = "Y" ] ;then
+echo -e "\n$YMESSAGE\n"
+echo 'RHEL6DEFAULTVALUE=y' >> /root/.bashrc
+#COMMANDEXECUTION
+elif  [ "$INPUT" = "n" -o "$INPUT" = "N" ] ;then
+echo -e "\n$NMESSAGE\n"
+echo 'RHEL6DEFAULTVALUE=n' >> /root/.bashrc
+#COMMANDEXECUTION
+else
+echo -e "\n$FMESSAGE\n"
+REQUEST
+fi
+}

@@ -1,0 +1,93 @@
+function GUI_REQUIREMENTS {
+    #------------------
+    echo ""
+    echo "*************************************************************"
+    echo " Script configuration requirements installing for this server"
+    echo "*************************************************************"
+    echo "*********************************************************"
+    echo "SET SELINUX TO PERMISSIVE FOR THE INSTALL AND CONFIG OF SATELLITE"
+    echo "*********************************************************"
+    echo "In order for the script to work properly we need to eisable Selinux and the     firewall."
+    read -p "Enter yY disable selinux and stop the firewall " -n 1 -r
+    if [[ $REPLY =~ ^[Yy]$ ]]
+    then
+        sed -i 's/SELINUX=enforcing/SELINUX=permissive/g' /etc/selinux/config
+        setenforce 0
+        service firewalld stop
+        chkconfig firewalld off
+        HNAME=$(hostname)
+        DOM="$(hostname -d)"
+        service firewalld stop
+        setenforce 0
+        mkdir -p /home/admin/Downloads
+    fi
+
+    echo ""
+    echo "Enabling EPEL to enable packages required for this script to succeed, enter nN     to skip this if you already have epel enabled."
+    read -p "Enter yY to setup epel" -n 1 -r
+    if [[ $REPLY =~ ^[Yy]$ ]]
+    then
+        yum -q list installed epel-release-latest-7 &>/dev/null && echo     "epel-release-latest-7 is installed" || yum install -y https://    dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm --skip-broken
+        yum -q list installed yum-utils &>/dev/null && echo "yum-utils is installed" ||     yum install -y yum-util* --skip-broken
+        yum-config-manager --enable epel 
+        yum-config-manager --save --setopt=*.skip_if_unavailable=true
+        rm -fr /var/cache/yum/*
+        yum clean all
+    fi
+
+    echo " "
+    echo "*********************************************************"
+    echo "INSTALLING PACKAGES TO ENABLE GUI FOR THIS SCRIPT"
+    echo "*********************************************************"
+    yum -q list installed lynx &>/dev/null && echo "lynx is installed" || yum install -y     lynx --skip-broken
+    yum -q list installed perl &>/dev/null && echo "perl is installed" || yum install -y     perl --skip-broken
+    yum -q list installed dialog &>/dev/null && echo "dialog is installed" || yum     install -y dialog --skip-broken
+    yum -q list installed xdialog &>/dev/null && echo "xdialog is installed" || yum     localinstall -y xdialog-2.3.1-13.el7.centos.x86_64.rpm --skip-broken
+    yum -q list installed firefox &>/dev/null && echo "firefox is installed" || install     -y firefox --skip-broken
+    yum -q list installed gtk2-devel &>/dev/null && echo "gtk2-devel is installed" ||     yum install -y gtk2-devel --skip-broken
+    yum -q list installed gnome-terminal &>/dev/null && echo "gnome-terminal is     installed" || yum install -y gnome-terminal --skip-broken
+    yum install -y dconf*
+    touch ./SCRIPT
+    echo " "
+    }
+    ls ./SCRIPT
+    if [ $? -eq 0 ]; then
+        echo 'The requirements to run this script have been met, proceeding'
+    else
+        echo "Installing requirements to run script please stand by"
+        SCRIPT
+        sleep 5
+    echo " "
+    fi
+
+#configures dialog command for proper environment
+if [[ -n $DISPLAY ]]
+then
+    # Assume script running under X:windows
+    DIALOG=`which Xdialog`
+    RC=$?
+    if [[ $RC != 0 ]]
+    then
+        DIALOG=`which dialog`
+        RC=$?
+        if [[ $RC != 0 ]]
+        then
+            echo "Error:: Could not locate suitable dialog command: Please install dialog or if running in a desktop install Xdialog."
+            subscription-manager unregister
+            subscription manager clean
+            exit 1
+        fi
+    fi
+else
+    # If Display is no set assume ok to use dialog
+    DIALOG=`which dialog`
+    RC=$?
+    if [[ $RC != 0 ]]
+    then
+        echo "Error:: Could not locate suitable dialog command: Please install dialog or if running in a desktop install Xdialog."
+        subscription-manager unregister
+        subscription manager clean
+    exit 1
+    fi
+fi
+}

@@ -1,0 +1,47 @@
+function REDHAT_SUBSCRIPTIONS {
+    echo ""
+    echo "*********************************************************"
+    echo "UNREGESTERING SYSTEM"
+    echo "*********************************************************"
+    echo "To ensure the system has proper entitlements and the ability to enable     required repos. If you system is already setup and properly entitled, enter nN for     no."
+    read -p "Enter yY to unrgister system " -n 1 -r
+    if [[ $REPLY =~ ^[Yy]$ ]]
+    then
+        subscription-manager unregister
+        subscription-manager clean
+        echo " "
+        echo "*********************************************************"
+        echo "REGESTERING SYSTEM"
+        echo "*********************************************************"
+        subscription-manager register --auto-attach
+        echo " "
+        echo "*********************************************************"
+        echo "NOTE:"
+        echo "*********************************************************"
+        echo "Attaching to your Satellite subscription using the pool id if the     predefined value fails please obtain your pool id in another terminal running:
+    
+           subscription-manager list --available
+           or 
+           subscription-manager list --available --matches 'Red Hat Satellite'"
+        echo " "
+        read -p "Press [Enter] 32 digit pool id if prompted "
+        echo " "
+        subscription-manager attach --pool=`subscription-manager list --available     --matches 'Red Hat Satellite Infrastructure Subscription' --pool-only`
+        if [ $? -eq 0 ]; then
+            echo 'Attaching Red Hat Satellite Infrastructure Subscription'
+        else
+            echo 'None of the predefined Satellite Pool IDs worked please enter your 32     digit alphanumeric Pool ID'
+            read POOLID
+            subscription-manager attach --pool=`POOLID`
+            echo " "
+        fi
+        echo " "
+        echo "*********************************************************"
+        echo "SET REPOS ENABLING THE REDHATTOOLSINSTALLER SCRIPT TO RUN"
+        echo "*********************************************************"
+        subscription-manager repos --disable "*" || exit 1
+        subscription-manager repos --enable=rhel-7-server-rpms || exit 1
+        subscription-manager repos --enable=rhel-7-server-extras-rpms || exit 1
+        subscription-manager repos --enable=rhel-7-server-optional-rpms || exit 1
+    fi
+}
