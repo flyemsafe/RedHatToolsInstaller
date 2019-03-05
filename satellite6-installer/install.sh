@@ -43,6 +43,11 @@ DEFAULTMSG
 SYNCREL5
 SYNCREL6
 
+if [ "${IPA_CLIENT}A" == "trueA" ]
+then
+  yum install -y ipa-client ipa-admintools
+fi
+
 YMESSAGE="Adding to /root/.bashrc vars"
 NMESSAGE="Skipping"
 FMESSAGE="PLEASE ENTER Y or N"

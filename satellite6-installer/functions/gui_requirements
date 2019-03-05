@@ -90,3 +90,26 @@ else
     fi
 fi
 }
+
+#------------------------------
+function INSTALLDEPS {
+#------------------------------
+echo ""
+echo "*********************************************************"
+echo "INSTALLING DEPENDENCIES FOR SATELLITE OPERATING ENVIRONMENT"
+echo "*********************************************************"
+echo -ne "\e[8;40;170t"
+yum-config-manager --enable epel
+sleep 5
+yum install -y screen yum-utils vim gcc gcc-c++ git rh-nodejs8-npm make automake kernel-devel ruby-devel libvirt-client bind dhcp tftp syslinux* xorg-x11-server-Xorg  xorg-x11-server-common ntp chrony sos
+sleep 5
+echo ""
+echo "*********************************************************"
+echo "INSTALLING DEPENDENCIES FOR CONTENT VIEW AUTO PUBLISH"
+echo "*********************************************************"
+yum -y install python-pip rubygem-builder
+yum-config manager --disable epel
+pip install --upgrade pip
+yum clean all ; rm -rf /var/cache/yum
+yum upgrade -y; yum update -y
+}

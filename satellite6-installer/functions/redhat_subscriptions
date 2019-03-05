@@ -45,3 +45,22 @@ function REDHAT_SUBSCRIPTIONS {
         subscription-manager repos --enable=rhel-7-server-optional-rpms || exit 1
     fi
 }
+
+#------------------------------
+function INSTALLREPOS {
+#------------------------------
+echo ""
+echo "*********************************************************"
+echo "SET REPOS FOR INSTALLING AND UPDATING SATELLITE 6.4"
+echo "*********************************************************"
+echo -ne "\e[8;40;170t"
+subscription-manager repos --disable '*'
+yum-config-manager --disable epel
+subscription-manager repos --enable=rhel-7-server-rpms || exit 1
+subscription-manager repos --enable=rhel-server-rhscl-7-rpms || exit 1
+subscription-manager repos --enable=rhel-7-server-optional-rpms || exit 1
+subscription-manager repos --enable=rhel-7-server-satellite-6.4-rpms || exit 1
+subscription-manager repos --enable=rhel-7-server-satellite-maintenance-6-rpms || exit 1
+yum clean all
+rm -rf /var/cache/yum
+}
